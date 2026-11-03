@@ -1,33 +1,34 @@
-$('dp').onclick=e=>{if(e.target.dataset.c){pen=e.target.dataset.c;er=0}};$('de').onclick=()=>er=1;
-const snap=()=>{hist.push(dx.getImageData(0,0,900,600));if(hist.length>12)hist.shift()};
-$('du').onclick=()=>{const h=hist.pop();if(h)dx.putImageData(h,0,0)};$('dr').onclick=()=>{snap();dx.clearRect(0,0,900,600)};
-$('dg').onchange=()=>{dc.style.background=$('dg').value};
-const pt=e=>{const r=dc.getBoundingClientRect();return[(e.clientX-r.left)*900/r.width,(e.clientY-r.top)*600/r.height]};
-dc.onpointerdown=e=>{e.preventDefault();dc.setPointerCapture(e.pointerId);snap();dn=1;const[x,y]=pt(e);dx.globalCompositeOperation=er?'destination-out':'source-over';dx.strokeStyle=pen;dx.lineWidth=er?$('dw').value*3:$('dw').value;dx.lineCap=dx.lineJoin='round';dx.beginPath();dx.moveTo(x,y);dx.lineTo(x+.1,y+.1);dx.stroke()};
-dc.onpointermove=e=>{if(!dn)return;const[x,y]=pt(e);dx.lineTo(x,y);dx.stroke();dx.beginPath();dx.moveTo(x,y)};dc.onpointerup=()=>dn=0;
-function newCard(){const c=document.createElement('canvas');c.width=900;c.height=600;ins('<img class="card" src="'+c.toDataURL()+'" style="width:80%;display:block;margin:8px auto;background:#fffbe6;border:1px solid #ccc"><p><br></p>');setTimeout(()=>{const i=[...ed.querySelectorAll('img.card')].pop();if(i){sel(i);pin();drawOpen(i)}},50)}
-function drawOpen(i){ct=i;hist=[];er=0;dx.globalCompositeOperation='source-over';dx.clearRect(0,0,900,600);$('dg').value=[...$('dg').options].some(o=>o.value==i.style.backgroundColor)?i.style.backgroundColor:'#fffbe6';dc.style.background=i.style.backgroundColor||'#fffbe6';const m=new Image();m.onload=()=>dx.drawImage(m,0,0,900,600);m.src=i.src;$('dm').hidden=false}
-$('dx').onclick=()=>$('dm').hidden=true;
-$('ds').onclick=()=>{ct.src=dc.toDataURL();ct.style.background=$('dg').value;$('dm').hidden=true;ch()};
-/* التصدير: صورة أو PDF */
-const b64=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(b)});
-async function out(name,blob){try{const C=window.Capacitor,Pl=C&&C.Plugins;if(Pl&&Pl.Filesystem&&Pl.Share){const r=await Pl.Filesystem.writeFile({path:name,data:await b64(blob),directory:'CACHE'});await Pl.Share.share({title:name,files:[r.uri]})}else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()}}catch(e){alert('تعذر الحفظ: '+(e.message||e))}}
-async function shot(){flush();sel(null);const w=720,c=ed.cloneNode(true);c.removeAttribute('id');c.removeAttribute('contenteditable');c.style.cssText='width:'+w+'px;padding:24px;background:#fff;color:#000;font:17px/1.8 sans-serif;box-sizing:border-box';
- c.insertAdjacentHTML('afterbegin','<style>img{max-width:100%;height:auto}p,div,li,h1,h2,blockquote{unicode-bidi:plaintext}h1{font-size:1.7em}h2{font-size:1.35em}</style><h1 dir="auto">'+esc((cur()||{}).t||'')+'</h1>');
- const h=document.createElement('div');h.style.cssText='position:fixed;left:-9999px;top:0';h.append(c);document.body.append(h);const H=c.offsetHeight;h.remove();
- const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+H+'"><foreignObject width="100%" height="100%">'+new XMLSerializer().serializeToString(c)+'</foreignObject></svg>';
- const im=new Image();await new Promise((r,j)=>{im.onload=r;im.onerror=j;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});
- const s=Math.min(2,16000/H),cv=document.createElement('canvas');cv.width=w*s;cv.height=H*s;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);return{cv,w,H,s}}
-const nm=()=>((cur()||{}).t||'note').replace(/[^\p{L}\p{N}]+/gu,'_').slice(0,30)||'note';
-async function exPng(){try{const{cv}=await shot();cv.toBlob(b=>out(nm()+'.png',b),'image/png')}catch(e){alert('تعذر إنشاء الصورة')}}
-async function exPdf(){try{const{cv,w,H,s}=await shot(),ph=Math.round(w*1.4142*s),n=Math.max(1,Math.ceil(cv.height/ph)),jp=[];
- for(let i=0;i<n;i++){const c=document.createElement('canvas');c.width=cv.width;c.height=ph;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,ph);x.drawImage(cv,0,-i*ph);const u=atob(c.toDataURL('image/jpeg',.9).split(',')[1]),a=new Uint8Array(u.length);for(let k=0;k<u.length;k++)a[k]=u.charCodeAt(k);jp.push({b:a,w:c.width,h:ph})}
- const parts=[],off=[];let len=0;const add=v=>{const u=typeof v=='string'?new TextEncoder().encode(v):v;parts.push(u);len+=u.length},ob=(i,f)=>{off[i]=len;add(i+' 0 obj\n');f();add('\nendobj\n')};
- add('%PDF-1.4\n');ob(1,()=>add('<</Type/Catalog/Pages 2 0 R>>'));ob(2,()=>add('<</Type/Pages/Count '+n+'/Kids['+jp.map((_,i)=>(5+i*3)+' 0 R').join(' ')+']>>'));
- jp.forEach((p,i)=>{ob(3+i*3,()=>{add('<</Type/XObject/Subtype/Image/Width '+p.w+'/Height '+p.h+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+p.b.length+'>>\nstream\n');add(p.b);add('\nendstream')});const cs='q 595 0 0 842 0 0 cm /I Do Q';ob(4+i*3,()=>add('<</Length '+cs.length+'>>\nstream\n'+cs+'\nendstream'));ob(5+i*3,()=>add('<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Contents '+(4+i*3)+' 0 R/Resources<</XObject<</I '+(3+i*3)+' 0 R>>>>>>'))});
- const xr=len,N=3*n+3;add('xref\n0 '+N+'\n0000000000 65535 f \n');for(let i=1;i<N;i++)add(String(off[i]).padStart(10,'0')+' 00000 n \n');add('trailer\n<</Size '+N+'/Root 1 0 R>>\nstartxref\n'+xr+'\n%%EOF');
- out(nm()+'.pdf',new Blob(parts,{type:'application/pdf'}))}catch(e){alert('تعذر إنشاء PDF')}}
-$('ex').onclick=()=>{const p=$('pp');p.innerHTML='<button style="font-size:16px">🖼 حفظ كصورة</button><button style="font-size:16px">📄 حفظ كـ PDF</button>';p.onpointerdown=null;p.onclick=e=>{if(e.target.tagName!='BUTTON')return;p.hidden=true;e.target.textContent.includes('PDF')?exPdf():exPng()};p.hidden=false};
-document.addEventListener('pointerdown',e=>{if(!$('pp').hidden&&!$('pp').contains(e.target)&&!e.target.closest('#rb,#ex,#mv,.it'))$('pp').hidden=true},true);
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ملاحظاتي</title>
+<style>
+:root{--bg:#fff;--fg:#1d1d1f;--mut:#6b7280;--bd:#e5e7eb;--ac:#f59e0b;--sb:#f8f8f6;--hv:#0001}
+@media(prefers-color-scheme:dark){:root{--bg:#18181b;--fg:#f4f4f5;--mut:#9ca3af;--bd:#2f2f35;--sb:#202024;--hv:#fff2}}
+*{box-sizing:border-box}
+body{margin:0;height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+button,select,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;border-radius:8px;min-width:36px;height:36px;padding:0 7px}
+button:active{background:var(--hv)}
+select{background:var(--bg);border:1px solid var(--bd);border-radius:8px;height:34px}
+.pg{flex:1;display:flex;flex-direction:column;min-height:0}
+.bar{display:flex;align-items:center;gap:4px;padding:8px 10px;border-bottom:1px solid var(--bd)}
+.bar h2{flex:1;margin:0;font-size:19px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#q{margin:8px 10px;border:1px solid var(--bd);border-radius:10px;padding:9px 12px;background:var(--bg)}
+#ls{flex:1;overflow:auto;padding:0 10px}
+.it{display:flex;align-items:center;gap:8px;padding:12px 8px;border-bottom:1px solid var(--bd);cursor:pointer}
+.it>span{font-size:24px}.it>div{flex:1;min-width:0}.it b{display:block}
+.it small{color:var(--mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ti{flex:1;border:0;background:none;font-size:19px;font-weight:700;outline:0;min-width:0}
+#tabs{display:flex;border-bottom:1px solid var(--bd)}
+#tabs button{flex:1;border-radius:0;height:38px;font-size:14px}#tabs .on{border-bottom:3px solid var(--ac);font-weight:700}
+.rb{display:flex;flex-wrap:wrap;gap:3px;padding:6px 8px;border-bottom:1px solid var(--bd);background:var(--sb)}
+#ew{flex:1;overflow:auto}
+#ed{padding:16px;min-height:100%;outline:0;font-size:17px;line-height:26px;overflow-wrap:anywhere}
 
-/* شريط عائم للنص المحدد */
+#ed h1{font-size:1.7em;margin:.4em 0}#ed h2{font-size:1.35em;margin:.4em 0}
+#ed blockquote{border-inline-start:3px solid var(--ac);margin:8px 0;padding:0 12px;color:var(--mut)}
+#ed img{max-width:100%;height:auto;border-radius:4px}
+#ed img{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}#ed img.sel{outline:3px solid #3b82f6;touch-action:none}
+.pop{position:fixed;inset:auto 10px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;gap:4px;max-height:45vh;overflow:auto;box-shadow:0 4px 20px #0005;z-index:5}
+.pop button{font-size:22px}.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--bd)}
+.md{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:9}
