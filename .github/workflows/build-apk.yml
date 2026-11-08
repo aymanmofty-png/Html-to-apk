@@ -29,6 +29,89 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Patch manifest (permissions + landscape sensor)
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i '/android.permission.INTERNET/a\    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' "$M"
+          sed -i '0,/<activity/s//<activity android:screenOrientation="sensorLandscape"/' "$M"
+          cat "$M"
+
+      - name: Native patch (immersive full screen, hide pointer, keep landscape)
+        run: |
+          F=$(find android/app/src/main/java -name MainActivity.java | head -1)
+          PKG=$(grep -m1 '^package ' "$F" | sed 's/package \(.*\);/\1/')
+          cat > "$F" <<EOF
+          package $PKG;
+
+          import android.content.pm.ActivityInfo;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.view.PointerIcon;
+          import android.view.View;
+          import android.view.WindowManager;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+              getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+              try {
+                if (Build.VERSION.SDK_INT >= 28) {
+                  WindowManager.LayoutParams lp = getWindow().getAttributes();
+                  lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                  getWindow().setAttributes(lp);
+                }
+              } catch (Exception e) {}
+              immersive();
+              hidePointer();
+            }
+
+            @Override
+            public void onResume() {
+              super.onResume();
+              immersive();
+              hidePointer();
+            }
+
+            @Override
+            public void onWindowFocusChanged(boolean hasFocus) {
+              super.onWindowFocusChanged(hasFocus);
+              if (hasFocus) {
+                immersive();
+                hidePointer();
+              }
+            }
+
+            private void immersive() {
+              try {
+                WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                if (c != null) {
+                  c.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                  c.hide(WindowInsetsCompat.Type.systemBars());
+                }
+              } catch (Exception e) {}
+            }
+
+            private void hidePointer() {
+              try {
+                if (Build.VERSION.SDK_INT >= 24 && getBridge() != null && getBridge().getWebView() != null) {
+                  View v = getBridge().getWebView();
+                  v.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
+                }
+              } catch (Exception e) {}
+            }
+          }
+          EOF
+          cat "$F"
+
+      - name: Generate icons
+        run: npx capacitor-assets generate --android || true
+
       - name: Sync web files
         run: npx cap sync android
 
