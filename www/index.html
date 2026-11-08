@@ -561,7 +561,7 @@ axb.oncontextmenu=e=>e.preventDefault();{let tm=0;axb.onpointerdown=()=>{tm=setT
 ['touchstart','touchmove','touchend','touchcancel'].forEach(n=>window.addEventListener(n,e=>{const c=e.changedTouches&&e.changedTouches[0];if(B&&T().on&&c&&c.touchType=='stylus'){e.stopImmediatePropagation();if(e.cancelable)e.preventDefault();if(n=='touchstart')dg('touch-stylus blocked')}},{capture:true,passive:false}));
 const ED=el=>el&&(el.isContentEditable||/^(INPUT|TEXTAREA)$/.test(el.tagName));
 function lockP(on){try{const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.ScreenOrientation;if(P)P.lock({orientation:on?'portrait':'landscape'});else screen.orientation.lock(on?'portrait':'landscape').catch(()=>{})}catch(e){}}
-addEventListener('focusin',e=>{if((ROT||(B&&T().on))&&!SUSP&&ED(e.target)){SUSP=1;lockP(1);setTimeout(updateRot,60);setTimeout(updateRot,600)}});
+addEventListener('focusin',e=>{if(B&&T().on&&!SUSP&&ED(e.target)){SUSP=1;lockP(1);setTimeout(updateRot,60);setTimeout(updateRot,600)}});
 addEventListener('focusout',()=>setTimeout(()=>{if(SUSP&&!ED(document.activeElement)){SUSP=0;lockP(0);setTimeout(updateRot,60);setTimeout(updateRot,600)}},350));
 $('fl').onclick=()=>{const t=T();t.fl=!t.fl;persist();updateRot()};
 
