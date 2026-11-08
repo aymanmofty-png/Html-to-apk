@@ -29,14 +29,13 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
-      - name: Patch manifest (permissions + landscape sensor)
+      - name: Patch manifest (permissions)
         run: |
           M=android/app/src/main/AndroidManifest.xml
           sed -i '/android.permission.INTERNET/a\    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' "$M"
-          sed -i '0,/<activity/s//<activity android:screenOrientation="sensorLandscape"/' "$M"
           cat "$M"
 
-      - name: Native patch (immersive full screen, hide pointer, keep landscape)
+      - name: Native patch (immersive full screen, hide pointer)
         run: |
           F=$(find android/app/src/main/java -name MainActivity.java | head -1)
           PKG=$(grep -m1 '^package ' "$F" | sed 's/package \(.*\);/\1/')
@@ -58,7 +57,6 @@ jobs:
             @Override
             public void onCreate(Bundle savedInstanceState) {
               super.onCreate(savedInstanceState);
-              setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
               getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
               try {
                 if (Build.VERSION.SDK_INT >= 28) {
