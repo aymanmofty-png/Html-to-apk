@@ -211,7 +211,7 @@ async function shot(ni){flush();sel(null);const w=Math.round(ed.getBoundingClien
  const h=document.createElement('div');h.style.cssText='position:fixed;left:-9999px;top:0';h.append(o);APP().append(h);let H=o.offsetHeight;[...c.children].forEach(n=>{if(n.dataset&&n.dataset.pin)H=Math.max(H,c.offsetTop+n.offsetTop+n.offsetHeight+12)});H=Math.ceil(H);const T=c.offsetTop;H=Math.max(H,Math.ceil(T+inkMax()+24),Math.ceil(w*1.4142));h.remove();
  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+H+'"><foreignObject width="100%" height="100%">'+new XMLSerializer().serializeToString(o)+'</foreignObject></svg>';
  const im=new Image();await new Promise((r,j)=>{im.onload=r;im.onerror=j;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});
- const s=Math.min(3,16000/H),cv=document.createElement('canvas');cv.width=Math.round(w*s);cv.height=Math.round(H*s);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);const nn=cur();if(!ni&&nn&&((nn.b||[]).length||nn.bg)){x.save();x.scale(s,s);x.translate(0,T);paint(x,w,H-T,nn.bg||0,nn.b||[]);x.restore()}return{cv,w,H,s,T}}
+ const s=Math.min(3,16000/H),cv=document.createElement('canvas');cv.width=Math.round(w*s);cv.height=Math.round(H*s);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);const nn=cur();if(!ni&&nn&&((nn.b||[]).length||nn.bg)){x.save();x.scale(s,s);x.translate(0,T);try{drawObjs(x,nn.b||[])}catch(e){}paint(x,w,H-T,nn.bg||0,nn.b||[]);x.restore()}return{cv,w,H,s,T}}
 const nm=()=>((cur()||{}).t||'note').replace(/[^\p{L}\p{N}]+/gu,'_').slice(0,30)||'note';
 async function exPng(){try{const{cv}=await shot();cv.toBlob(b=>out(nm()+'.png',b),'image/png')}catch(e){alert('تعذر إنشاء الصورة')}}
 async function exPdf(){try{const{cv,w,H,s}=await shot(),ph=Math.round(w*1.4142*s),n=Math.max(1,Math.ceil(cv.height/ph)),jp=[];
@@ -723,7 +723,7 @@ const vi0=viewInk;viewInk=window.viewInk=function(){vi0();syncObjs()};
 const editObj=s=>{if(!B)board(1);tool('sel',1);setTimeout(()=>{if(B)selShape(B.s.includes(s)?s:null)},60)};
 function mkObj(s){const el=document.createElement('div');el.className='ob';el.insertAdjacentHTML('beforeend','<b class="obb" title="تحريك وتعديل">✥</b>');
  const bb=el.querySelector('.obb');bb.onclick=ev=>{ev.stopPropagation();editObj(s)};
- if(s.k=='vid'){const v=document.createElement('video');v.controls=true;v.playsInline=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;display:block';el.prepend(v);kv('r','v_'+s.id).then(f=>{if(f)v.src=URL.createObjectURL(f);else el.append('الفيديو غير موجود')})}
+ if(s.k=='vid'){const v=document.createElement('video');v.controls=true;v.preload='auto';v.playsInline=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;display:block';el.prepend(v);kv('r','v_'+s.id).then(f=>{if(f)v.src=URL.createObjectURL(f);else el.append('الفيديو غير موجود')})}
  else pdfFrame(el,s);return el}
 /* بعد الدوران يُعاد استخدام الحدود: تحريك الشكل بالقلم أو الإصبع من المقابض الموجودة */
 function addObj(o){o.x=ed.offsetWidth/2;o.y=ew.scrollTop+Math.max(o.h/2+10,ew.clientHeight/2);
@@ -781,10 +781,15 @@ function addSym(sy){const b=txtBox(sy,.55),o={t:'shape',k:'txt',tx:sy,x:ed.offse
 const pp=$('pp');
 function symPop(){pp.innerHTML=EM.concat('❤️ 💙 💚 💛 🧡 💜 ⭐ ✔️ ✖️ ➕ ➖ ➡️ ⬅️ ⬆️ ⬇️ ❓ ❗ ♻️ 🔺 🔻 ⚽ 🍀 🎓 ✏️ 📐 📏 🔬 🧪 🌍'.split(' ')).map(e=>`<button data-s="${e}" style="font-size:22px">${e}</button>`).join('');pp.onpointerdown=null;pp.onclick=e=>{const s=e.target.dataset.s;if(s)addSym(s)};showPop()}
 const edit=$('so');const eb=document.createElement('b');eb.className='sk';eb.dataset.a='e';eb.textContent='✎';eb.style.background='#16a34a';eb.hidden=true;edit.append(eb);
+window.drawObjs=(x,list)=>{list.forEach(s=>{if(!(s&&s.t=='shape'&&(s.k=='vid'||s.k=='pdf')))return;const el=OB.get(s);x.save();x.translate(s.x,s.y);x.rotate(s.r||0);x.beginPath();x.rect(-s.w/2,-s.h/2,s.w,s.h);x.clip();x.fillStyle=s.k=='pdf'?'#525659':'#000';x.fillRect(-s.w/2,-s.h/2,s.w,s.h);
+ try{if(s.k=='vid'){const v=el&&el.querySelector('video');if(v&&v.videoWidth&&v.readyState>=2){const r=Math.min(s.w/v.videoWidth,s.h/v.videoHeight),w=v.videoWidth*r,h=v.videoHeight*r;x.drawImage(v,-w/2,-h/2,w,h)}else{x.fillStyle='#fff';x.font='40px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('▶ '+(s.name||'فيديو'),0,0)}}
+ else if(el&&el.pdf){const sc=el.querySelector('.pdfc');el.querySelectorAll('.pgp').forEach(d=>{const y0=d.offsetTop-sc.scrollTop-s.h/2;d.querySelectorAll('canvas').forEach(c=>x.drawImage(c,-s.w/2,y0,d.offsetWidth,d.offsetHeight))})}}catch(e){}
+ x.restore()})};
 const ps0=placeSO;placeSO=function(){ps0();const o=B&&B.sel;eb.hidden=!(o&&o.k=='txt');if(o&&o.k=='txt'){eb.style.left=-o.w/2+'px';eb.style.top='0px'}};
 edit.addEventListener('pointerdown',async e=>{if(e.target.dataset.a!='e')return;e.stopImmediatePropagation();e.preventDefault();const o=B&&B.sel;if(!o)return;const v=await ask('عدّل النص (| لسطر جديد)',String(o.tx).replace(/\n/g,'|'));if(v==null||!v.trim())return;const old={...o},tx=v.replace(/\|/g,'\n'),b0=txtBox(o.tx),b1=txtBox(tx),k=o.w/(b0.w||1);o.tx=tx;o.w=b1.w*k;o.h=b1.h*k;B.h.push(['m',o,old,{...o}]);B.r2=[];redraw();placeSO();save()},true);
-TL.push(['🔤','txt'],['🙂','sym'],['🎬','vid'],['📄','pdf']);
-const tl0=tool;tool=function(k,q){if(k=='txt'){addText();return}if(k=='sym'){symPop();return}if(k=='vid'||k=='pdf'){ACT[k]();return}return tl0(k,q)};
+TL.push(['⌨','kb'],['🙂','sym'],['🎬','vid'],['📄','pdf']);
+const tl0=tool;tool=function(k,q){if(k=='kb'){if(!B)return;selShape(null);B.tool='kb';bc.style.pointerEvents='none';pp.hidden=true;[...bt.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.k=='kb'));setTimeout(()=>ed.focus(),30);return}
+ if(B&&B.tool=='kb'&&!['undo','redo','kb'].includes(k)&&document.activeElement&&ED(document.activeElement))document.activeElement.blur();if(k=='sym'){symPop();return}if(k=='vid'||k=='pdf'){ACT[k]();return}return tl0(k,q)};
 /* الضغط على رمز/نص في الملاحظة يفتح تعديله */
 ew.addEventListener('click',e=>{if(B||e.target.closest('.ob'))return;const n=cur();if(!n||!n.b)return;const r=ed.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const o=[...n.b].reverse().find(s=>s.t=='shape'&&s.k=='txt'&&hitS(s,x,y,6));if(o){e.stopPropagation();e.preventDefault();editObj(o)}},true);
 
