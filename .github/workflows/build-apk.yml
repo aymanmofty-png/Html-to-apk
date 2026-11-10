@@ -121,6 +121,20 @@ jobs:
               }
             }
 
+            @Override
+            public boolean dispatchGenericMotionEvent(android.view.MotionEvent ev) {
+              hidePointer();
+              return super.dispatchGenericMotionEvent(ev);
+            }
+
+            @Override
+            public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+              try {
+                if (ev.getToolType(0) != android.view.MotionEvent.TOOL_TYPE_FINGER) hidePointer();
+              } catch (Exception e) {}
+              return super.dispatchTouchEvent(ev);
+            }
+
             private void immersive() {
               try {
                 WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
