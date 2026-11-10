@@ -32,7 +32,7 @@ jobs:
       - name: Patch manifest (permissions)
         run: |
           M=android/app/src/main/AndroidManifest.xml
-          sed -i '/android.permission.INTERNET/a\    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' "$M"
+          sed -i '/android.permission.INTERNET/a\    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />' "$M"
           cat "$M"
 
       - name: Native patch (immersive full screen, hide pointer)
@@ -42,7 +42,10 @@ jobs:
           cat > "$F" <<EOF
           package $PKG;
 
-          import android.content.pm.ActivityInfo;
+          import android.app.NotificationManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.provider.Settings;
           import android.os.Build;
           import android.os.Bundle;
           import android.view.PointerIcon;
@@ -54,6 +57,8 @@ jobs:
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
+            private int oldFilter = -1;
+            private boolean asked = false;
             @Override
             public void onCreate(Bundle savedInstanceState) {
               super.onCreate(savedInstanceState);
@@ -74,6 +79,37 @@ jobs:
               super.onResume();
               immersive();
               hidePointer();
+              silence();
+            }
+
+            @Override
+            public void onPause() {
+              restoreSound();
+              super.onPause();
+            }
+
+            private void silence() {
+              try {
+                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (nm == null) return;
+                if (nm.isNotificationPolicyAccessGranted()) {
+                  if (oldFilter < 0) oldFilter = nm.getCurrentInterruptionFilter();
+                  nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALARMS);
+                } else if (!asked) {
+                  asked = true;
+                  startActivity(new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS));
+                }
+              } catch (Exception e) {}
+            }
+
+            private void restoreSound() {
+              try {
+                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (nm != null && oldFilter >= 0 && nm.isNotificationPolicyAccessGranted()) {
+                  nm.setInterruptionFilter(oldFilter);
+                }
+                oldFilter = -1;
+              } catch (Exception e) {}
             }
 
             @Override
@@ -99,13 +135,23 @@ jobs:
               try {
                 if (Build.VERSION.SDK_INT >= 24 && getBridge() != null && getBridge().getWebView() != null) {
                   View v = getBridge().getWebView();
-                  v.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
+                  PointerIcon nul = PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL);
+                  v.setPointerIcon(nul);
+                  getWindow().getDecorView().setPointerIcon(nul);
+                  v.setOnHoverListener((x, ev) -> { x.setPointerIcon(nul); return false; });
                 }
               } catch (Exception e) {}
             }
           }
           EOF
           cat "$F"
+
+      - name: Copy pdf.js into www
+        run: |
+          mkdir -p www/lib
+          cp node_modules/pdfjs-dist/build/pdf.min.js www/lib/pdf.min.js
+          cp node_modules/pdfjs-dist/build/pdf.worker.min.js www/lib/pdf.worker.min.js
+          ls -la www/lib
 
       - name: Generate icons
         run: npx capacitor-assets generate --android || true
