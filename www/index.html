@@ -665,6 +665,11 @@ const endPick=()=>{if(!PK)return;const s=PK.st;PK=null;G(2500);setPM(1);restore(
 const back=()=>{if(PK&&PK.t&&performance.now()-PK.t>900)setTimeout(()=>{if(PK&&!document.hidden)endPick()},1400)};
 addEventListener('focus',back);document.addEventListener('visibilitychange',back);
 
+/* ---- الكيبورد عمودي دائمًا: إيقاف وضع القلم مؤقتًا أثناء الكتابة والمشاركة ---- */
+let KS=0,KT=0,KE=null;
+addEventListener('focusin',e=>{if(PM&&!PK&&!KS&&ED(e.target)){KS=1;KT=performance.now();KE=e.target;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(0);lockP(1);setTimeout(()=>{try{if(KE&&KE.isConnected&&document.activeElement!=KE){KE.focus();if(KE==ed&&rng){const g=getSelection();g.removeAllRanges();g.addRange(rng)}}}catch(x){}},900);restore(s)}});
+addEventListener('focusout',()=>setTimeout(()=>{if(KS&&performance.now()-KT>2000&&!ED(document.activeElement)){KS=0;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(1);restore(s)}},500));
+const out0=out;out=async function(...a){const had=PM&&!PK&&!KS;if(had){setPM(0);lockP(1);await new Promise(r=>setTimeout(r,700))}try{return await out0.apply(this,a)}finally{if(had){setPM(1)}}};
 /* ---- قارئ PDF ---- */
 const LIB=()=>new Promise((res,rej)=>{if(window.pdfjsLib)return res(window.pdfjsLib);const s=document.createElement('script');s.src='lib/pdf.min.js';s.onload=()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js'}catch(e){}res(window.pdfjsLib)};s.onerror=()=>rej(new Error('مكتبة PDF غير موجودة'));document.head.append(s)});
 const getDoc=async b=>(await LIB()).getDocument({data:new Uint8Array(await b.arrayBuffer())}).promise;
