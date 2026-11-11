@@ -628,7 +628,7 @@ function shape(){let k,h;const t=B&&B.tool;
  else{const c=t=='hl'?B.hc:B.col,d=Math.max(5,B.size*(t=='hl'?3:1));k='p'+d+c;h='<i style="position:absolute;left:'+(-d/2)+'px;top:'+(-d/2)+'px;width:'+d+'px;height:'+d+'px;border-radius:50%;background:'+c+';opacity:.75;box-shadow:0 0 0 1px #fff,0 0 0 2px #0008"></i>'+PEN}
  if(k!=ck){ck=k;cu.innerHTML=h}}
 const MV=['pen','naskh','ruqah','kufi','arab','hl','er'];
-function mv(e){const on=!!(PM||B);if(!on||e.pointerType=='touch'||(B&&(B.tool=='ptr'||B.tool=='glow'))){cu.style.display='none';return}
+function mv(e){const on=!!(PM||B);if(window.dirBusy&&dirBusy()){cu.style.display='none';return}if(!on||e.pointerType=='touch'||(B&&(B.tool=='ptr'||B.tool=='glow'))){cu.style.display='none';return}
  if(cu.parentNode!=APP())APP().append(cu);shape();
  const dy=B&&MV.includes(B.tool)?(B.off||0):0;const cx=e.clientX,cy=e.clientY;cu.style.display='block';cu.style.transform='translate('+cx+'px,'+(cy-dy)+'px)';
  if(B&&S.wm=='o'&&e.type=='pointermove'&&(e.buttons&1||e.pressure>0)&&MV.includes(B.tool)){const r=ew.getBoundingClientRect(),y=e.clientY,z=r.height*.08;if(y>r.bottom-z)ew.scrollTop+=10;else if(y<r.top+z)ew.scrollTop-=10}}
@@ -666,9 +666,18 @@ const back=()=>{if(PK&&PK.t&&performance.now()-PK.t>900)setTimeout(()=>{if(PK&&!
 addEventListener('focus',back);document.addEventListener('visibilitychange',back);
 
 /* ---- الكيبورد عمودي دائمًا: إيقاف وضع القلم مؤقتًا أثناء الكتابة والمشاركة ---- */
-let KS=0,KT=0,KE=null;window.dirBusy=()=>!!(KS||PK);
-addEventListener('focusin',e=>{if(PM&&!PK&&!KS&&ED(e.target)){KS=1;KT=performance.now();KE=e.target;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(0);lockP(1);setTimeout(()=>{try{if(KE&&KE.isConnected&&document.activeElement!=KE){KE.focus();if(KE==ed&&rng){const g=getSelection();g.removeAllRanges();g.addRange(rng)}}}catch(x){}},900);restore(s)}});
-addEventListener('focusout',()=>setTimeout(()=>{if(KS&&performance.now()-KT>2000&&!ED(document.activeElement)){KS=0;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(1);restore(s)}},500));
+let KS=0,KT=0,KE=null,UTg=null;window.dirBusy=()=>!!(KS||PK);window.kbIntent=0;
+const kbb=document.createElement('button');kbb.id='kbh';kbb.hidden=true;kbb.textContent='⌨ إخفاء الكيبورد';kbb.style.cssText='position:fixed;z-index:99990;top:66px;right:8px;height:46px;padding:0 16px;border-radius:23px;background:#16a34a;color:#fff;border:2px solid #fff;font-size:15px;font-weight:700;box-shadow:0 2px 10px #0007';document.body.append(kbb);
+addEventListener('pointerdown',e=>{UTg=e.target},true);
+const userTyped=t=>{if(!t)return false;if(t.id=='dli'||performance.now()-(window.kbIntent||0)<1500)return true;const u=UTg;if(!u||u===document.body||u===document.documentElement||u.id=='app')return false;return u===t||t.contains(u)||(u.contains&&u.contains(t))};
+const relKS=()=>{if(!KS)return;KS=0;kbb.hidden=true;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(1);restore(s)};
+kbb.onclick=e=>{e.stopPropagation();try{document.activeElement&&document.activeElement.blur()}catch(x){}relKS()};
+addEventListener('focusin',e=>{if(PM&&!PK&&!KS&&ED(e.target)&&userTyped(e.target)){KS=1;KT=performance.now();KE=e.target;kbb.hidden=false;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(0);lockP(1);setTimeout(()=>{try{if(KS&&KE&&KE.isConnected&&document.activeElement!=KE){KE.focus();if(KE==ed&&rng){const g=getSelection();g.removeAllRanges();g.addRange(rng)}}}catch(x){}},900);restore(s)}});
+addEventListener('focusout',()=>setTimeout(()=>{if(KS&&performance.now()-KT>2000&&!ED(document.activeElement))relKS()},500));
+/* القلم معطّل أثناء الكتابة */
+['pointerdown','pointermove','pointerup','pointercancel','mousedown','mouseup','mousemove','click','dblclick','contextmenu'].forEach(n=>addEventListener(n,e=>{if(!KS||!e.isTrusted)return;const pen=e.pointerType?e.pointerType!='touch':performance.now()-LT>800;if(pen&&!(e.target&&e.target.id=='kbh')){e.stopImmediatePropagation();if(e.cancelable)e.preventDefault()}},true));
+/* إخفاء الكيبورد بأي طريقة: يعود الاتجاه تلقائيًا */
+try{let vmin=1e9;visualViewport.addEventListener('resize',()=>{if(!KS||performance.now()-KT<2500){vmin=1e9;return}const h=visualViewport.height;if(h<vmin)vmin=h;if(h>vmin+150){try{document.activeElement&&document.activeElement.blur()}catch(x){}relKS()}})}catch(e){}
 const out0=out;out=async function(...a){const had=PM&&!PK&&!KS;if(had){setPM(0);lockP(1);await new Promise(r=>setTimeout(r,700))}try{return await out0.apply(this,a)}finally{if(had){setPM(1)}}};
 /* ---- قارئ PDF ---- */
 const LIB=()=>new Promise((res,rej)=>{if(window.pdfjsLib)return res(window.pdfjsLib);const s=document.createElement('script');s.src='lib/pdf.min.js';s.onload=()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js'}catch(e){}res(window.pdfjsLib)};s.onerror=()=>rej(new Error('مكتبة PDF غير موجودة'));document.head.append(s)});
@@ -790,7 +799,7 @@ window.drawObjs=(x,list)=>{list.forEach(s=>{if(!(s&&s.t=='shape'&&(s.k=='vid'||s
 const ps0=placeSO;placeSO=function(){ps0();const o=B&&B.sel;eb.hidden=!(o&&o.k=='txt');if(o&&o.k=='txt'){eb.style.left=-o.w/2+'px';eb.style.top='0px'}};
 edit.addEventListener('pointerdown',async e=>{if(e.target.dataset.a!='e')return;e.stopImmediatePropagation();e.preventDefault();const o=B&&B.sel;if(!o)return;const v=await ask('عدّل النص (| لسطر جديد)',String(o.tx).replace(/\n/g,'|'));if(v==null||!v.trim())return;const old={...o},tx=v.replace(/\|/g,'\n'),b0=txtBox(o.tx),b1=txtBox(tx),k=o.w/(b0.w||1);o.tx=tx;o.w=b1.w*k;o.h=b1.h*k;B.h.push(['m',o,old,{...o}]);B.r2=[];redraw();placeSO();save()},true);
 TL.push(['⌨','kb'],['🙂','sym'],['🎬','vid'],['📄','pdf']);
-const tl0=tool;tool=function(k,q){if(k=='kb'){if(!B)return;selShape(null);B.tool='kb';bc.style.pointerEvents='none';pp.hidden=true;[...bt.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.k=='kb'));setTimeout(()=>ed.focus(),30);return}
+const tl0=tool;tool=function(k,q){if(k=='kb'){if(!B)return;selShape(null);B.tool='kb';bc.style.pointerEvents='none';pp.hidden=true;[...bt.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.k=='kb'));window.kbIntent=performance.now();setTimeout(()=>ed.focus(),30);return}
  if(B&&B.tool=='kb'&&!['undo','redo','kb'].includes(k)&&document.activeElement&&ED(document.activeElement))document.activeElement.blur();if(k=='sym'){symPop();return}if(k=='vid'||k=='pdf'){ACT[k]();return}return tl0(k,q)};
 /* الضغط على رمز/نص في الملاحظة يفتح تعديله */
 ew.addEventListener('click',e=>{if(B||e.target.closest('.ob'))return;const n=cur();if(!n||!n.b)return;const r=ed.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const o=[...n.b].reverse().find(s=>s.t=='shape'&&s.k=='txt'&&hitS(s,x,y,6));if(o){e.stopPropagation();e.preventDefault();editObj(o)}},true);
@@ -804,11 +813,13 @@ const rc=document.createElement('div');rc.style.cssText='position:fixed;inset:0;
 let applied=0,curScr=null;
 const dirs=()=>(S.dirs=S.dirs||{h:1,n:1,b:1});
 const lockD=d=>{try{const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.ScreenOrientation;if(P)P.lock({orientation:NAMES[d-1]});else screen.orientation.lock(d==1?'portrait':'landscape').catch(()=>{})}catch(e){}[60,500,1500].forEach(t=>setTimeout(updateRot,t))};
-const lab=()=>{const d=dirs()[curScr||'h'];pmb.textContent='🧭 اتجاه '+['١','٢','٣'][d-1];pmb.style.background=d>1?'#dc2626':'#64748b'};
+const lab=()=>{const d=dirs()[curScr||'h'];if(window.dirBusy&&dirBusy()){pmb.textContent='⌨ مؤقت';pmb.style.background='#16a34a';return}pmb.textContent='🧭 اتجاه '+['١','٢','٣'][d-1];pmb.style.background=d>1?'#dc2626':'#64748b'};
 function cover(){rc.style.background=getComputedStyle(document.body).backgroundColor||'#fff';rc.style.transition='none';rc.style.opacity='1';clearTimeout(cover.t);cover.t=setTimeout(()=>{rc.style.transition='opacity .25s';rc.style.opacity='0'},900)}
 function applyDir(d,force){PM=d>1?1:0;if(applied!=d||force){if(applied&&(applied!=d||force))cover();applied=d;lockD(d)}lab()}
 window.dirSet=on=>{const d=dirs()[curScr||'h'];if(on)applyDir(d,true);else{PM=0;cover();applied=1;lockP(1);setTimeout(updateRot,60);setTimeout(updateRot,500)}lab()};
 pmb.onclick=()=>{const s=curScr||'h',D=dirs();D[s]=D[s]%3+1;persist();applyDir(D[s])};
+const ur0=updateRot;updateRot=function(){ur0();clearTimeout(ur0.t);ur0.t=setTimeout(()=>{if(!$('home').hidden)renderHome()},700)};
+try{new MutationObserver(()=>{if($('dlg').hidden)setTimeout(()=>{if(!$('home').hidden)renderHome()},900)}).observe($('dlg'),{attributes:true,attributeFilter:['hidden']})}catch(e){}
 setInterval(()=>{const s=$('pane').hidden?'h':(B?'b':'n'),d=dirs()[s];if(window.dirBusy&&dirBusy()){curScr=s;lab();return}if(s!=curScr||d!=applied){curScr=s;applyDir(d)}else lab()},250);
 })();
 </script></body></html>
