@@ -571,7 +571,7 @@ $('fl').onclick=()=>{const t=T();t.fl=!t.fl;persist();updateRot()};
   if(n=='pointerdown'){if(e.target!==bc)return;if(tids.size==1){tm1={id:e.pointerId,e};e.stopImmediatePropagation();e.preventDefault();go(e)}else{mt=1;if(tm1){const e1=tm1.e;tm1=null;try{bc.onpointerdown(e1)}catch(x){}}}return}
   if(mt)return;
   if(tm1&&tm1.id==e.pointerId){e.stopImmediatePropagation();e.preventDefault();if(up){tm1=null;persist()}else go(e)}},true))}
-(async()=>{const s=await load();if(s){S=s;if(S.tab)S.tab.on=0;if(S.f){S.d=S.f.map(x=>({id:x.id,n:x.n,p:null}));delete S.f}S.d=S.d||[];S.cf=null}S.cn=null;renderHome();setTimeout(updateRot,100)})();
+(async()=>{const s=await load();if(s){S=s;if(S.tab)S.tab.on=0;if(S.f){S.d=S.f.map(x=>({id:x.id,n:x.n,p:null}));delete S.f}S.d=S.d||[];S.cf=null}delete S.cm;S.cn=null;renderHome();setTimeout(updateRot,100)})();
 
 /* ===== الإصدار 2: قوائم فرعية، مؤشر مرسوم، تحريك، PDF، أدوات اختيار الملفات، حفظ المكان ===== */
 (()=>{
@@ -630,7 +630,7 @@ function shape(){let k,h;const t=B&&B.tool;
 const MV=['pen','naskh','ruqah','kufi','arab','hl','er'];
 function mv(e){const on=!!(PM||B);if(!on||e.pointerType=='touch'||(B&&(B.tool=='ptr'||B.tool=='glow'))){cu.style.display='none';return}
  if(cu.parentNode!=APP())APP().append(cu);shape();
- const dy=B&&MV.includes(B.tool)?(B.off||0):0;let[cx,cy]=S.cm&&e.isTrusted&&e.pointerType!='touch'?qmap(e):[e.clientX,e.clientY];cu.style.display='block';cu.style.transform='translate('+cx+'px,'+(cy-dy)+'px)';
+ const dy=B&&MV.includes(B.tool)?(B.off||0):0;const cx=e.clientX,cy=e.clientY;cu.style.display='block';cu.style.transform='translate('+cx+'px,'+(cy-dy)+'px)';
  if(B&&S.wm=='o'&&e.type=='pointermove'&&(e.buttons&1||e.pressure>0)&&MV.includes(B.tool)){const r=ew.getBoundingClientRect(),y=e.clientY,z=r.height*.08;if(y>r.bottom-z)ew.scrollTop+=10;else if(y<r.top+z)ew.scrollTop-=10}}
 ['pointermove','pointerdown','pointerup'].forEach(n=>addEventListener(n,mv,true));
 document.documentElement.addEventListener('mouseleave',()=>cu.style.display='none');
@@ -706,9 +706,6 @@ const st=document.createElement('style');st.textContent=`
 .ob{position:absolute;overflow:hidden;box-sizing:border-box;border:1px solid #8886;background:#000}
 .obb{position:absolute;left:3px;top:3px;z-index:4;width:28px;height:28px;border-radius:50%;background:#2563ebcc;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;touch-action:none}
 .pgn button{width:34px;height:34px;border-radius:50%;opacity:.8;padding:0;font-size:14px;touch-action:none}
-#cbb{position:fixed;z-index:45;left:8px;bottom:130px;height:32px;padding:0 12px;border-radius:16px;background:#0ea5e9;border:2px solid #fff;color:#fff;font-size:12px;font-weight:700;box-shadow:0 2px 8px #0006;touch-action:none}
-#cal2{position:fixed;inset:0;z-index:60;background:#000b;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;font-size:17px;line-height:1.6}
-#cal2 button{font-size:16px;padding:8px 16px;border-radius:12px}
 `;document.head.append(st);
 
 /* ---------- عناصر السبورة ---------- */
@@ -798,41 +795,5 @@ const tl0=tool;tool=function(k,q){if(k=='kb'){if(!B)return;selShape(null);B.tool
 /* الضغط على رمز/نص في الملاحظة يفتح تعديله */
 ew.addEventListener('click',e=>{if(B||e.target.closest('.ob'))return;const n=cur();if(!n||!n.b)return;const r=ed.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const o=[...n.b].reverse().find(s=>s.t=='shape'&&s.k=='txt'&&hitS(s,x,y,6));if(o){e.stopPropagation();e.preventDefault();editObj(o)}},true);
 
-/* ---------- معايرة اللوح الفيزيائي (في كل الصفحات) ---------- */
-const cbb=document.createElement('button');cbb.id='cbb';document.body.append(cbb);
-const cbl=()=>cbb.textContent=S.cm?'🎯 معايرة ✓':'🎯 معايرة';setInterval(()=>{cbl();if(cbb.parentNode!=APP())APP().append(cbb)},500);
-const MS=[[1,0,0,1],[0,1,-1,0],[-1,0,0,-1],[0,-1,1,0],[-1,0,0,1],[1,0,0,-1],[0,1,1,0],[0,-1,-1,0]];
-let CS=null;const o2=document.createElement('div');o2.id='cal2';o2.hidden=true;document.body.append(o2);
-function calUI(){const m=['','١) ضع قلمك على اللوح في مكان الكتابة المعتاد، وارسم خطًا طويلًا من <b>اليسار إلى اليمين</b> كما تراه أمامك','٢) الآن ارسم خطًا طويلًا من <b>الأعلى إلى الأسفل</b>'];
- o2.innerHTML='<div>'+(CS.msg||m[CS.st])+'</div><div><button id="c2x">إلغاء</button> <button id="c2r">تعطيل المعايرة</button></div>';
- o2.querySelector('#c2x').onclick=()=>{CS=null;o2.hidden=true};o2.querySelector('#c2r').onclick=()=>{S.cm=null;persist();CS=null;o2.hidden=true;cbl()}}
-cbb.onclick=()=>{CS={st:1,d:[],msg:''};o2.hidden=false;calUI()};
-cbb.addEventListener('pointerdown',e=>e.stopPropagation());
-function calEv(e,n){e.stopImmediatePropagation();e.preventDefault();const u=e.clientX/innerWidth,v=e.clientY/innerHeight;
- if(n=='pointerdown'){CS.s=[u,v];CS.p=1}else if(CS.p){CS.e=[u,v];if(n!='pointermove'){CS.p=0;const d=[CS.e[0]-CS.s[0],CS.e[1]-CS.s[1]];
-  if(Math.hypot(d[0],d[1])<.2){CS.msg='الخط قصير. أعد الرسم بخط أطول<br>'+'';calUI();CS.msg='';return}
-  CS.d.push(d);if(CS.st==1){CS.st=2;CS.msg='';calUI()}else{let best=0,bs=-9;MS.forEach((m,i)=>{const a=CS.d[0],b=CS.d[1],h1=Math.hypot(...a),h2=Math.hypot(...b),sc=(m[0]*a[0]+m[1]*a[1])/h1+(m[2]*b[0]+m[3]*b[1])/h2;if(sc>bs){bs=sc;best=i}});
-   S.cm=best==0?null:MS[best];persist();CS=null;o2.hidden=true;cbl();hint(best==0?'اللوح متوافق، لا حاجة للمعايرة':'تمت المعايرة ✓')}}}}
-const qmap=e=>{const W=innerWidth,H=innerHeight,u=e.clientX/W-.5,v=e.clientY/H-.5,m=S.cm;return[(m[0]*u+m[1]*v+.5)*W,(m[2]*u+m[3]*v+.5)*H]};
-window.qmap=qmap;
-/* تمرير الأحداث المعايَرة */
-let RT=null;
-const sy=(el,type,X,Y,e,dn)=>{const[sx,sy2]=ROT?toScr(X,Y):[X,Y];el.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,clientX:sx,clientY:sy2,pointerType:e.pointerType,pointerId:e.pointerId,isPrimary:true,buttons:dn?1:0,pressure:dn?.5:0,view:window}))};
-function route(n,e,X,Y){const dn=n=='pointerdown',up=n=='pointerup'||n=='pointercancel';
- if(dn){const el=document.elementFromPoint(X,Y);let k='ui';if(B&&el===bc)k='cv';else if(el&&(el===ew||ew.contains(el))&&!el.closest('.obb,.pgn'))k='ct';
-  RT={k,el,x:X,y:Y,mv:0};if(k=='ct'){RT.tg=(el.closest&&el.closest('.pdfc'))||ew;RT.s0=RT.tg.scrollTop}}
- if(!RT)return;const pr=new Proxy(e,{get:(o,k)=>k=='clientX'?X:k=='clientY'?Y:typeof o[k]=='function'?o[k].bind(o):o[k]});
- if(RT.k=='cv'){const f=bc['on'+n];if(f)f(pr);if(up)RT=null;return}
- if(Math.hypot(X-RT.x,Y-RT.y)>7)RT.mv=1;
- if(RT.k=='ct'){if(!dn&&RT.mv&&!up)RT.tg.scrollTop=RT.s0-(Y-RT.y);
-  if(up){const el=RT.el;if(!RT.mv&&el&&el.isConnected){sy(el,'pointerdown',X,Y,e,1);sy(el,'pointerup',X,Y,e,0);const[sx,sy2]=ROT?toScr(X,Y):[X,Y];el.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:sx,clientY:sy2,view:window}));
-    if(ed.contains(el)||el===ed){const r=document.caretRangeFromPoint(X,Y);if(r&&ed.contains(r.startContainer)){ed.focus();const g=getSelection();g.removeAllRanges();g.addRange(r)}}}RT=null}return}
- const el=RT.el;if(!el||!el.isConnected){if(up)RT=null;return}
- if(el.tagName=='INPUT'&&el.type=='range'){const r=el.getBoundingClientRect(),mn=+el.min||0,mx=+el.max||100,f=(X-r.left)/r.width;el.value=mn+Math.max(0,Math.min(1,f))*(mx-mn);el.dispatchEvent(new Event('input',{bubbles:true}));if(up){el.dispatchEvent(new Event('change',{bubbles:true}));RT=null}return}
- if(dn){sy(el,'pointerdown',X,Y,e,1)}else if(up){sy(el,'pointerup',X,Y,e,0);if(!RT.mv){const[sx,sy2]=ROT?toScr(X,Y):[X,Y];el.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:sx,clientY:sy2,view:window}));if(ED(el))el.focus()}RT=null}else sy(el,'pointermove',X,Y,e,1)}
-['pointerdown','pointermove','pointerup','pointercancel'].forEach(n=>addEventListener(n,e=>{if(!e.isTrusted||e.pointerType=='touch')return;if(CS){calEv(e,n);return}if(!S.cm)return;
- e.stopImmediatePropagation();e.preventDefault();const[X,Y]=qmap(e);if(n=='pointermove'&&!RT)return;route(n,e,X,Y)},true));
-['click','auxclick','dblclick','contextmenu','mousedown','mouseup'].forEach(n=>addEventListener(n,e=>{if((S.cm||CS)&&e.isTrusted&&e.detail>0&&e.pointerType!='touch'&&performance.now()-LT>800){e.stopImmediatePropagation();e.preventDefault()}},true));
-['touchstart','touchmove','touchend','touchcancel'].forEach(n=>addEventListener(n,e=>{const c=e.changedTouches&&e.changedTouches[0];if((S.cm||CS)&&c&&c.touchType=='stylus'){e.stopImmediatePropagation();if(e.cancelable)e.preventDefault()}},{capture:true,passive:false}));
 })();
 </script></body></html>
