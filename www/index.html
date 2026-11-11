@@ -656,7 +656,7 @@ new MutationObserver(()=>{if(pp.hidden&&bt.style.display=='none'){bt.style.displ
 window.MODE=()=>'<div style="width:100%;display:flex;align-items:center;gap:8px"><span style="width:54px;font-size:13px">النظام</span><button class="tg '+(S.wm!='o'?'on':'')+'" data-m="d">✎ مباشر</button><button class="tg '+(S.wm=='o'?'on':'')+'" data-m="o">⇳ إزاحة</button></div>';
 
 /* ---- اختيار الصور/الملفات عموديًا: إيقاف وضع القلم مؤقتًا ---- */
-const setPM=v=>{PM=v;pmb.style.background=PM?'#dc2626':'#64748b';pmb.textContent=PM?'✓ وضع القلم':'✍ وضع القلم';orient(PM);updateRot()};
+const setPM=v=>window.dirSet(v);
 let PK=null;
 window.pick=id=>{closeM();const inp=$(id);if(!PM){inp.click();return}
  PK={st:ew.scrollTop>2?ew.scrollTop:lastSC,t:0};G(2500);setPM(0);lockP(1);setTimeout(()=>{if(PK)PK.t=performance.now();inp.click()},500)};
@@ -666,7 +666,7 @@ const back=()=>{if(PK&&PK.t&&performance.now()-PK.t>900)setTimeout(()=>{if(PK&&!
 addEventListener('focus',back);document.addEventListener('visibilitychange',back);
 
 /* ---- الكيبورد عمودي دائمًا: إيقاف وضع القلم مؤقتًا أثناء الكتابة والمشاركة ---- */
-let KS=0,KT=0,KE=null;
+let KS=0,KT=0,KE=null;window.dirBusy=()=>!!(KS||PK);
 addEventListener('focusin',e=>{if(PM&&!PK&&!KS&&ED(e.target)){KS=1;KT=performance.now();KE=e.target;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(0);lockP(1);setTimeout(()=>{try{if(KE&&KE.isConnected&&document.activeElement!=KE){KE.focus();if(KE==ed&&rng){const g=getSelection();g.removeAllRanges();g.addRange(rng)}}}catch(x){}},900);restore(s)}});
 addEventListener('focusout',()=>setTimeout(()=>{if(KS&&performance.now()-KT>2000&&!ED(document.activeElement)){KS=0;const s=ew.scrollTop>2?ew.scrollTop:lastSC;G(2500);setPM(1);restore(s)}},500));
 const out0=out;out=async function(...a){const had=PM&&!PK&&!KS;if(had){setPM(0);lockP(1);await new Promise(r=>setTimeout(r,700))}try{return await out0.apply(this,a)}finally{if(had){setPM(1)}}};
@@ -795,5 +795,20 @@ const tl0=tool;tool=function(k,q){if(k=='kb'){if(!B)return;selShape(null);B.tool
 /* الضغط على رمز/نص في الملاحظة يفتح تعديله */
 ew.addEventListener('click',e=>{if(B||e.target.closest('.ob'))return;const n=cur();if(!n||!n.b)return;const r=ed.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const o=[...n.b].reverse().find(s=>s.t=='shape'&&s.k=='txt'&&hitS(s,x,y,6));if(o){e.stopPropagation();e.preventDefault();editObj(o)}},true);
 
+})();
+
+/* ===== الإصدار 7: زر الاتجاهات لكل واجهة ===== */
+(()=>{
+const NAMES=['portrait','landscape-primary','landscape-secondary'];
+const rc=document.createElement('div');rc.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s';document.documentElement.append(rc);
+let applied=0,curScr=null;
+const dirs=()=>(S.dirs=S.dirs||{h:1,n:1,b:1});
+const lockD=d=>{try{const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.ScreenOrientation;if(P)P.lock({orientation:NAMES[d-1]});else screen.orientation.lock(d==1?'portrait':'landscape').catch(()=>{})}catch(e){}[60,500,1500].forEach(t=>setTimeout(updateRot,t))};
+const lab=()=>{const d=dirs()[curScr||'h'];pmb.textContent='🧭 اتجاه '+['١','٢','٣'][d-1];pmb.style.background=d>1?'#dc2626':'#64748b'};
+function cover(){rc.style.background=getComputedStyle(document.body).backgroundColor||'#fff';rc.style.transition='none';rc.style.opacity='1';clearTimeout(cover.t);cover.t=setTimeout(()=>{rc.style.transition='opacity .25s';rc.style.opacity='0'},900)}
+function applyDir(d,force){PM=d>1?1:0;if(applied!=d||force){if(applied&&(applied!=d||force))cover();applied=d;lockD(d)}lab()}
+window.dirSet=on=>{const d=dirs()[curScr||'h'];if(on)applyDir(d,true);else{PM=0;cover();applied=1;lockP(1);setTimeout(updateRot,60);setTimeout(updateRot,500)}lab()};
+pmb.onclick=()=>{const s=curScr||'h',D=dirs();D[s]=D[s]%3+1;persist();applyDir(D[s])};
+setInterval(()=>{const s=$('pane').hidden?'h':(B?'b':'n'),d=dirs()[s];if(window.dirBusy&&dirBusy()){curScr=s;lab();return}if(s!=curScr||d!=applied){curScr=s;applyDir(d)}else lab()},250);
 })();
 </script></body></html>
