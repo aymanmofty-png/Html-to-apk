@@ -136,7 +136,21 @@ jobs:
               } catch (Exception e) {}
             }
 
+            private boolean ovAdded = false;
+            private void addOverlay() {
+              try {
+                if (ovAdded || Build.VERSION.SDK_INT < 24) return;
+                View ov = new View(this);
+                ov.setClickable(false);
+                ov.setFocusable(false);
+                ov.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
+                addContentView(ov, new android.view.ViewGroup.LayoutParams(-1, -1));
+                ovAdded = true;
+              } catch (Exception e) {}
+            }
+
             private void hidePointer() {
+              addOverlay();
               try {
                 if (Build.VERSION.SDK_INT >= 24 && getBridge() != null && getBridge().getWebView() != null) {
                   View v = getBridge().getWebView();
