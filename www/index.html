@@ -764,7 +764,7 @@ async function pdfBuild(el,s){const st=el.pdf,sc=el.querySelector('.pdfc');if(st
   const rp=async d=>{const i=+d.dataset.i;try{const c=await renderPageF(st.doc,i+1,Math.round(W*dpr));c.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%';d.prepend(c)}catch(e){}const k=document.createElement('canvas');k.className='pink';k.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none';k.width=Math.round(W*dpr);k.height=Math.round(W*st.ratios[i]*dpr);d.append(k);drawInk(el,s,i)};
   const obs=new IntersectionObserver(es=>es.forEach(en=>{const d=en.target;if(en.isIntersecting&&!d.dataset.r){d.dataset.r=1;rp(d)}}),{root:sc,rootMargin:'800px'});
   st.ratios.forEach((r,i)=>{const d=document.createElement('div');d.className='pgp';d.dataset.i=i;d.style.cssText='position:relative;width:'+W+'px;height:'+W*r+'px;background:#fff;outline:1px solid #8884;outline-offset:-1px';st.tops.push(y);y+=W*r;sc.append(d);obs.observe(d)});
-  if(st.fix&&oW){const f=st.fix,r=W/oW;st.fix=null;sc.scrollTop=(f.t+f.fy)*r-f.fy;sc.scrollLeft=(f.l+f.fx)*r-f.fx}else sc.scrollTop=keep*sc.scrollHeight}
+  if(st.fix&&oW){const f=st.fix,r=W/oW;st.fix=null;sc.scrollTop=(f.t+f.fy)*r-(f.gy==null?f.fy:f.gy);sc.scrollLeft=(f.l+f.fx)*r-(f.gx==null?f.fx:f.gx)}else sc.scrollTop=keep*sc.scrollHeight}
  catch(e){sc.textContent='تعذر فتح الملف: '+(e.message||e)}
  finally{st.busy=0;if(st.again){st.again=0;pdfBuild(el,s)}}}
 const getDocF=b=>getDocG(b),renderPageF=(d,i,w)=>renderPageG(d,i,w);
@@ -835,9 +835,13 @@ setInterval(()=>{const s=$('pane').hidden?'h':(B?'b':'n'),d=dirs()[s];if(window.
 const ew=$('ew'),st=document.createElement('style');st.textContent='#bzr,#bzl{position:fixed;z-index:9;left:8px;bottom:130px;height:32px;padding:0 12px;border-radius:16px;background:#2563eb;color:#fff;border:2px solid #fff;font-size:12px;font-weight:700;touch-action:none;box-shadow:0 2px 8px #0006}';document.head.append(st);
 const bzr=document.createElement('button');bzr.id='bzr';bzr.textContent='↺ 100%';bzr.hidden=true;
 let bzS=null;
-function setBZ(z,fx,fy){z=Math.max(.5,Math.min(3,z));if(z==BZ&&fx==null)return;let lx,ly;if(fx!=null){const r0=bc.getBoundingClientRect();lx=(fx-r0.left)/BZ;ly=(fy-r0.top)/BZ}
- if(BZ==1&&z!=1)bzS={l:ew.scrollLeft,t:ew.scrollTop};BZ=z;const o=ed.offsetWidth+'px 0',t=z==1?'':'scale('+z+')';[ed,bc,$('ol2')].forEach(e=>{if(!e)return;e.style.transformOrigin=o;e.style.transform=t;e.style.willChange=z==1?'':'transform'});
- if(fx!=null){const r=bc.getBoundingClientRect();ew.scrollLeft+=r.left+lx*z-fx;ew.scrollTop+=r.top+ly*z-fy}try{placeSO()}catch(e){}}
+function setBZ(z,fx,fy,lx,ly){z=Math.max(.25,Math.min(4,z));if(z==BZ&&fx==null)return;if(fx!=null&&lx==null){const r0=bc.getBoundingClientRect();lx=(fx-r0.left)/BZ;ly=(fy-r0.top)/BZ}
+ if(BZ==1&&z!=1)bzS={l:ew.scrollLeft,t:ew.scrollTop};BZ=z;const o=ed.offsetWidth+'px 0',t=z==1?'':'scale('+z+')';[ed,bc,$('ol2')].forEach(e=>{if(!e)return;e.style.transition='';e.style.transformOrigin=o;e.style.transform=t;e.style.willChange=''});
+ if(fx!=null){const fix=()=>{const r=bc.getBoundingClientRect(),dx=r.left+lx*z-fx,dy=r.top+ly*z-fy;if(Math.abs(dx)>.5)ew.scrollLeft+=dx;if(Math.abs(dy)>.5)ew.scrollTop+=dy};fix();requestAnimationFrame(()=>{fix();setTimeout(fix,50)})}try{placeSO()}catch(e){}if(z>1.05)setTimeout(()=>{try{crisp()}catch(e){}},60);else try{crisp(1)}catch(e){}}
+function crisp(rs){const w=ed.offsetWidth,h=ed.offsetHeight,d=Math.min(2,devicePixelRatio||1),q=rs?1:Math.min(BZ,2.5),d2=d*q;if(!B||bc.hidden)return;if(w*h*d2*d2>2.4e7)return;const W=Math.round(w*d2),H=Math.round(h*d2);if(bc.width==W&&bc.height==H)return;bc.width=W;bc.height=H;bx.setTransform(d2,0,0,d2,0,0);redraw()}
+const sy0=sync;sync=function(){sy0.apply(this,arguments);if(BZ>1.05)crisp()};
+const zind=document.createElement('div');zind.style.cssText='position:fixed;z-index:99;left:50%;top:70px;transform:translateX(-50%);background:#000c;color:#fff;padding:4px 14px;border-radius:14px;font:700 14px system-ui;pointer-events:none;display:none';
+let zit=0;window.zshow=t=>{if(zind.parentNode!=APP())APP().append(zind);zind.textContent=t;zind.style.display='block';clearTimeout(zit);zit=setTimeout(()=>zind.style.display='none',900)};
 window.setBZ=setBZ;bzr.onclick=()=>{setBZ(1);if(bzS){ew.scrollLeft=bzS.l;ew.scrollTop=bzS.t}};
 const loc=document.createElement('button');loc.id='bzr';loc.id='bzl';loc.textContent='🔍 آخر كتابة';loc.hidden=true;loc.style.bottom='170px';
 loc.onclick=()=>{if(!B)return;const L=[...B.s].reverse().find(x=>x&&(x.t=='shape'||(x.p&&x.p.length)));if(!L)return;let x,y;if(L.t=='shape'){x=L.x;y=L.y}else{const q=L.p[L.p.length-1];x=q[0];y=q[1]}const r=bc.getBoundingClientRect(),e=ew.getBoundingClientRect();ew.scrollTop+=r.top+y*BZ-(e.top+e.height/2);ew.scrollLeft+=r.left+x*BZ-(e.left+e.width/2)};
@@ -860,25 +864,42 @@ setInterval(()=>document.documentElement.classList.toggle('hd',hand()),150);
 /* تمرير وتكبير باللمس برمجيًا (أداة الكف) */
 const xy=t=>ROT?toUI(t.clientX,t.clientY):[t.clientX,t.clientY];
 const frameAt=(x,y)=>{const el=document.elementFromPoint(x,y),f=el&&el.closest&&el.closest('.ob');if(!f)return null;for(const[s,e]of OB)if(e===f&&s.k=='pdf')return{s,e};return null};
-let T=null;
-const loc2=(e,x,y)=>{const r=e.querySelector('.pdfc').getBoundingClientRect();return[(x-r.left)/BZ,(y-r.top)/BZ]};
-document.addEventListener('touchstart',e=>{if(!hand()||!e.target.closest||!e.target.closest('#ew'))return;
- if(T&&T.m=='pz')pzEnd();
- if(e.touches.length==1){if(e.target.closest('video'))return;const a=xy(e.touches[0]);T={m:'pan',el:e.target.closest('.pdfc')||ew,x:a[0],y:a[1]}}
- else if(e.touches.length==2){const a=xy(e.touches[0]),b=xy(e.touches[1]),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,fr=frameAt(mx,my);T={m:'pz',d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,fr,z0:fr?(fr.s.pz||1):BZ,mx,my,k:1};
-  if(fr){const sc=fr.e.querySelector('.pdfc'),f=loc2(fr.e,mx,my);T.f=f;T.sc=sc;sc.style.transformOrigin=f[0]+'px '+f[1]+'px';sc.style.willChange='transform'}}
+let T=null,fl=0;
+const cancelFl=()=>{if(fl){cancelAnimationFrame(fl);fl=0}};
+const LO=.25,HI=4,soft=z=>z>HI?HI*Math.pow(z/HI,.3):z<LO?LO*Math.pow(z/LO,.3):z;
+const hard=z=>{z=Math.max(LO,Math.min(HI,z));return Math.abs(z-1)<.06?1:z};
+const els3=()=>[ed,bc,$('ol2')].filter(Boolean);
+function fling(el,vx,vy){cancelFl();let t0=performance.now();const f=t=>{const dt=Math.min(40,t-t0);t0=t;const a=el.scrollTop,b=el.scrollLeft;el.scrollTop-=vy*dt;el.scrollLeft-=vx*dt;if(el.scrollTop==a)vy=0;if(el.scrollLeft==b)vx=0;const k=Math.pow(.94,dt/16.7);vx*=k;vy*=k;if(Math.hypot(vx,vy)>.03)fl=requestAnimationFrame(f);else fl=0};fl=requestAnimationFrame(f)}
+document.addEventListener('touchstart',e=>{cancelFl();if(!hand()||!e.target.closest||!e.target.closest('#ew'))return;
+ if(T&&T.md=='pz')pzEnd(true);
+ const now=performance.now();
+ if(e.touches.length==1){if(e.target.closest('video'))return;const a=xy(e.touches[0]);T={md:'pan',el:e.target.closest('.pdfc')||ew,x:a[0],y:a[1],h:[[now,a[0],a[1]]]}}
+ else if(e.touches.length==2){const a=xy(e.touches[0]),b=xy(e.touches[1]),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,fr=frameAt(mx,my);
+  T={md:'pz',d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,fr,z0:fr?(fr.s.pz||1):BZ,m0:[mx,my],m:[mx,my],k:1,t0:now,mv:0};
+  if(fr){const sc=fr.e.querySelector('.pdfc'),r=sc.getBoundingClientRect(),f=[(mx-r.left)/BZ,(my-r.top)/BZ];T.f=f;T.sc=sc;sc.style.transition='';sc.style.transformOrigin=f[0]+'px '+f[1]+'px';sc.style.willChange='transform'}
+  else{const r0=bc.getBoundingClientRect(),Ox=ed.offsetWidth,z0=BZ;T.Ox=Ox;T.u=(mx-r0.left)/z0;T.v=(my-r0.top)/z0;T.bl=r0.left-Ox+z0*Ox;T.bt=r0.top;els3().forEach(x=>{x.style.transition='';x.style.transformOrigin=Ox+'px 0';x.style.willChange='transform'})}}
  else T=null},{capture:true,passive:true});
-function pzApply(){if(!T||T.m!='pz')return;T.raf=0;if(T.fr){T.sc.style.transform='scale('+T.k+')'}else setBZ(T.z0*T.k,T.mx,T.my)}
-function pzEnd(){if(!T||T.m!='pz')return;const t=T;T=null;if(t.fr){const nz=Math.max(.5,Math.min(4,t.z0*t.k)),k=nz/t.z0;t.sc.style.transform='';t.sc.style.willChange='';if(Math.abs(k-1)>.01)window.pdfZoom(t.fr.e,t.fr.s,nz,t.f[0],t.f[1])}}
+function pzXf(t,zz){if(t.fr){return 'translate('+(t.m[0]-t.m0[0])/BZ+'px,'+(t.m[1]-t.m0[1])/BZ+'px) scale('+zz/t.z0+')'}const tx=t.m[0]-(t.bl+t.Ox+zz*(t.u-t.Ox)),ty=t.m[1]-(t.bt+zz*t.v);return 'translate('+tx+'px,'+ty+'px) scale('+zz+')'}
+function pzApply(){if(!T||T.md!='pz')return;T.raf=0;const zz=soft(T.z0*T.k);const x=pzXf(T,zz);if(T.fr)T.sc.style.transform=x;else els3().forEach(e=>e.style.transform=x);window.zshow(Math.round(zz*100)+'%')}
+function pzEnd(quick){if(!T||T.md!='pz')return;const t=T;T=null;cancelAnimationFrame(t.raf||0);
+ if(!t.mv&&performance.now()-t.t0<320&&!quick){/* نقرة بإصبعين: عودة إلى 100% */
+  if(t.fr){t.sc.style.transform='';t.sc.style.willChange='';window.pdfZoom(t.fr.e,t.fr.s,1)}else{els3().forEach(x=>{x.style.transform=BZ==1?'':'scale('+BZ+')';x.style.willChange=''});document.getElementById('bzr').click();window.zshow('100%')}return}
+ const zf=hard(t.fr?Math.max(.3,t.z0*t.k):t.z0*t.k);
+ if(t.fr){const g=[t.f[0]+(t.m[0]-t.m0[0])/BZ,t.f[1]+(t.m[1]-t.m0[1])/BZ];t.sc.style.transition='transform .12s ease-out';t.sc.style.transform=pzXf(t,zf);
+  window.pdfZoom(t.fr.e,t.fr.s,Math.min(4,zf),t.f[0],t.f[1],g[0],g[1],t.sc);return}
+ setBZ(zf,t.m[0],t.m[1],t.u,t.v);window.zshow(Math.round(zf*100)+'%')}
 document.addEventListener('touchmove',e=>{if(!T||!hand())return;if(e.cancelable)e.preventDefault();
- if(T.m=='pan'&&e.touches.length==1){const a=xy(e.touches[0]);T.el.scrollTop-=a[1]-T.y;T.el.scrollLeft-=a[0]-T.x;T.x=a[0];T.y=a[1]}
- else if(T.m=='pz'&&e.touches.length==2){const a=xy(e.touches[0]),b=xy(e.touches[1]);let k=(Math.hypot(a[0]-b[0],a[1]-b[1])||1)/T.d;if(T.fr)k=Math.max(.5/T.z0,Math.min(4/T.z0,k));T.k=k;if(!T.raf)T.raf=requestAnimationFrame(pzApply)}},{capture:true,passive:false});
-['touchend','touchcancel'].forEach(n=>document.addEventListener(n,e=>{if(T&&T.m=='pz'&&e.touches.length<2)pzEnd();else if(!e.touches.length)T=null},true));
-/* تكبير PDF: إعادة رسم فورية وعرض النسبة */
-window.pdfZoom=(el,s,z,fx,fy)=>{const sc=el.querySelector('.pdfc');s.pz=Math.max(.5,Math.min(4,z));if(Math.abs(s.pz-1)<.02)s.pz=1;
- if(fx==null){fx=sc.clientWidth/2;fy=sc.clientHeight/2}el.pdf.fix={t:sc.scrollTop,l:sc.scrollLeft,fx,fy};
+ if(T.md=='pan'&&e.touches.length==1){const a=xy(e.touches[0]),now=performance.now();T.el.scrollTop-=a[1]-T.y;T.el.scrollLeft-=a[0]-T.x;T.x=a[0];T.y=a[1];T.h.push([now,a[0],a[1]]);while(T.h.length>2&&now-T.h[0][0]>100)T.h.shift()}
+ else if(T.md=='pz'&&e.touches.length==2){const a=xy(e.touches[0]),b=xy(e.touches[1]),m=[(a[0]+b[0])/2,(a[1]+b[1])/2];let k=(Math.hypot(a[0]-b[0],a[1]-b[1])||1)/T.d;T.k=k;T.m=m;if(Math.abs(k-1)>.05||Math.hypot(m[0]-T.m0[0],m[1]-T.m0[1])>14)T.mv=1;if(!T.raf)T.raf=requestAnimationFrame(pzApply)}},{capture:true,passive:false});
+['touchend','touchcancel'].forEach(n=>document.addEventListener(n,e=>{
+ if(T&&T.md=='pz'&&e.touches.length<2){pzEnd();return}
+ if(T&&T.md=='pan'&&!e.touches.length){const h=T.h,a=h[0],b=h[h.length-1],dt=b[0]-a[0];if(dt>10&&performance.now()-b[0]<80){const vx=(b[1]-a[1])/dt,vy=(b[2]-a[2])/dt;if(Math.hypot(vx,vy)>.12)fling(T.el,vx,vy)}T=null}
+ else if(!e.touches.length)T=null},true));
+/* تكبير PDF: إعادة بناء مرة واحدة بعد الحركة */
+window.pdfZoom=(el,s,z,fx,fy,gx,gy,sc2)=>{const sc=el.querySelector('.pdfc');s.pz=Math.max(.3,Math.min(4,z));if(Math.abs(s.pz-1)<.02)s.pz=1;
+ if(fx==null){fx=sc.clientWidth/2;fy=sc.clientHeight/2}el.pdf.fix={t:sc.scrollTop,l:sc.scrollLeft,fx,fy,gx,gy};
  let l=el.querySelector('.zl');if(!l){l=document.createElement('div');l.className='zl';l.style.cssText='position:absolute;left:8px;bottom:8px;z-index:6;background:#000b;color:#fff;padding:3px 10px;border-radius:12px;font:700 13px system-ui;pointer-events:none';el.append(l)}
  l.textContent=Math.round(s.pz*100)+'%';clearTimeout(l.__t);l.__t=setTimeout(()=>l.remove(),1500);
- clearTimeout(el.__zt);el.__zt=setTimeout(()=>{pdfBuild(el,s);if(B)save();else sv();[250,800].forEach(t=>setTimeout(()=>{const d=el.style.display;el.style.display='none';void el.offsetHeight;el.style.display=d;try{redraw()}catch(x){}},t))},60)};
+ clearTimeout(el.__zt);el.__zt=setTimeout(()=>{Promise.resolve(pdfBuild(el,s)).then(()=>setTimeout(()=>{sc.style.transition='';sc.style.transform='';sc.style.willChange=''},sc2?200:0));if(B)save();else sv();[250,800].forEach(t=>setTimeout(()=>{const d=el.style.display;el.style.display='none';void el.offsetHeight;el.style.display=d;try{redraw()}catch(x){}},t))},sc2?150:60)};
 })();
 </script></body></html>
