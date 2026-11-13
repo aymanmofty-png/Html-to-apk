@@ -79,7 +79,12 @@ body.pres .bar,body.pres #mw,body.pres #bt,body.pres #fv,body.pres #rd{display:n
 #ed.rule{background-image:repeating-linear-gradient(transparent 0 25px,var(--bd) 25px 26px);background-origin:content-box;background-clip:content-box}
 #ru.on{background:var(--hv);outline:2px solid var(--ac)}
 [hidden]{display:none!important}
-html.tb,html.tb *{cursor:none!important}</style></head><body>
+html.tb,html.tb *{cursor:none!important}
+html,html *{cursor:none!important}
+button,.sw,.pop,.pgn,#scb,#bt,#rd,#pmb,#bzr,#kbh,#so,.obb,#tbn,#tw,.tg,.rb,#tabs,.bar,#pdfv .pb~*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+button{touch-action:manipulation}
+input,textarea,#ed{-webkit-user-select:text;user-select:text}
+</style></head><body>
 <div class="pg" id="home">
  <div class="bar"><button id="up">⬅️</button><h2 id="ht"></h2><button id="nd" title="مجلد جديد">📁＋</button><button id="nn" title="ملاحظة جديدة">📝＋</button></div>
  <input id="q" placeholder="🔍 بحث في كل الملاحظات"><div id="ls"></div>
@@ -140,7 +145,7 @@ const ins=h=>{rs();if(!document.execCommand('insertHTML',false,h))ed.insertAdjac
 const run=(c,v)=>{rs();document.execCommand(c,false,v||null);ed.dispatchEvent(new Event('input'))};
 try{document.execCommand('styleWithCSS',false,true);document.execCommand('defaultParagraphSeparator',false,'p')}catch(e){}
 const COL='#000000 #6b7280 #dc2626 #ea580c #f59e0b #16a34a #0d9488 #2563eb #7c3aed #db2777 #ffffff #fde047 #bbf7d0 #bfdbfe #fbcfe8 #fed7aa'.split(' ');
-function pal(fn){const p=$('pp');p.innerHTML=COL.map(c=>`<button class="sw" style="background:${c}" data-c="${c}"></button>`).join('')+'<button class="sw" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);position:relative"><input type="color" style="position:absolute;inset:0;opacity:0;width:100%;height:100%"></button>';
+function pal(fn){const p=$('pp');p.innerHTML=COL.map(c=>`<button class="sw" style="background:${c}" data-c="${c}"></button>`).join('');
  p.onpointerdown=e=>{if(e.target.tagName!='INPUT')e.preventDefault()};p.onclick=e=>{const c=e.target.dataset.c;if(c){fn(c);p.hidden=true}};p.querySelector('input').onchange=e=>{fn(e.target.value);p.hidden=true};showPop()}
 function showPop(){const a=document.activeElement;if(a&&a.blur)a.blur();const p=$('pp'),v=window.visualViewport;p.hidden=false;p.style.bottom=(v?Math.max(14,innerHeight-v.height-v.offsetTop+14):14)+'px'}
 const EM='😀 😂 🥰 😎 🤔 😢 😡 👍 👏 🙏 💪 🎉 💡 ⭐ 🔥 ❤️ ✅ ❌ ⚠️ 📌 📎 📝 📅 ⏰ 💰 🎯 🌟 🌈 🌸 ☀️ 🌙 📚 ✈️ 🏠 🚗 🍎 ☕'.split(' ');
@@ -419,7 +424,7 @@ $('rc').onclick=()=>record();
 /* مؤشر الحجم واللون: يظهر عند اختيار القلم ويختفي بعد اختيارهما */
 function ecur(e){const d=$('ec'),r=B.size*1.5+8;d.hidden=false;d.style.width=d.style.height=r*2+'px';d.style.left=e.clientX-r+'px';d.style.top=e.clientY-r+'px'}
 function penPop(m){const p=$('pp'),er=m==1,hl=B.tool=='hl',col=hl?B.hc:B.col;let dc=m>0,ds=0;const fin=()=>{if(dc&&ds)p.hidden=true},pv=()=>Math.min(60,er?B.size*3+16:B.size*(hl?3:1)),row=(id,mn,mx,v,l)=>`<div style="width:100%;display:flex;align-items:center;gap:8px"><span style="width:54px;font-size:13px">${l}</span><input id="${id}" type="range" min="${mn}" max="${mx}" value="${v}" style="flex:1"><b id="n_${id}" style="min-width:34px;text-align:center;font-size:17px">${v}</b>${id=='psz'?'<span style="width:64px;height:64px;display:flex;align-items:center;justify-content:center"><i id="pvv" style="display:block;border-radius:'+(er?'6px':'50%')+';background:'+(er?'#f9a8d4':col)+';width:'+pv()+'px;height:'+pv()+'px"></i></span>':''}</div>`;
- p.innerHTML=(m==0?COL.map(c=>`<button class="sw" style="background:${c}" data-c="${c}"></button>`).join('')+'<label class="sw" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);position:relative"><input type="color" style="position:absolute;inset:0;opacity:0;width:100%;height:100%"></label>':'')+(m==2?'':row('psz',1,30,Math.min(30,B.size),er?'حجم الممحاة':'الحجم'))+MODE()+(S.wm=='o'?row('pof',0,160,Math.max(0,S.offv||0),'الإزاحة'):'')+'<div style="width:100%;display:flex;gap:6px;flex-wrap:wrap">'+[['vl','┄ الخط الواصل']].map(([k,l])=>`<button class="tg ${B[k]?'on':''}" data-t="${k}">${l}</button>`).join('')+'</div><button id="pok" style="font-size:18px">✔</button>';
+ p.innerHTML=(m==0?COL.map(c=>`<button class="sw" style="background:${c}" data-c="${c}"></button>`).join(''):'')+(m==2?'':row('psz',1,30,Math.min(30,B.size),er?'حجم الممحاة':'الحجم'))+MODE()+(S.wm=='o'?row('pof',0,160,Math.max(0,S.offv||0),'الإزاحة'):'')+'<div style="width:100%;display:flex;gap:6px;flex-wrap:wrap">'+[['vl','┄ الخط الواصل']].map(([k,l])=>`<button class="tg ${B[k]?'on':''}" data-t="${k}">${l}</button>`).join('')+'</div><button id="pok" style="font-size:18px">✔</button>';
  p.onpointerdown=null;const v=$('pvv'),sz=$('psz');if(sz){sz.oninput=()=>{B.size=+sz.value;$('n_psz').textContent=sz.value;v.style.width=v.style.height=pv()+'px'};sz.onchange=()=>{ds=1;fin()}}
  const po=$('pof');if(po){po.oninput=e=>{S.offv=B.off=+e.target.value;$('n_pof').textContent=B.off};po.onchange=()=>{persist();if(m==2){ds=1;fin()}}}
  const c2=p.querySelector('input[type=color]');if(c2)c2.onchange=e=>{B[hl?'hc':'col']=e.target.value;v.style.background=e.target.value;dc=1;fin()};
@@ -832,18 +837,37 @@ const bzr=document.createElement('button');bzr.id='bzr';bzr.textContent='↺ 100
 function setBZ(z){z=Math.max(.5,Math.min(3,z));BZ=z;const o=ed.offsetWidth+'px 0',t=z==1?'':'scale('+z+')';[ed,bc,$('ol2')].forEach(e=>{if(!e)return;e.style.transformOrigin=o;e.style.transform=t});try{placeSO()}catch(e){}}
 window.setBZ=setBZ;bzr.onclick=()=>setBZ(1);
 setInterval(()=>{bzr.hidden=!(B&&BZ!=1);if(!B&&BZ!=1)setBZ(1);if(BZ!=1){const o=ed.offsetWidth+'px 0';[ed,bc,$('ol2')].forEach(e=>{if(e&&e.style.transformOrigin!=o)e.style.transformOrigin=o})}},400);
-window.pdfZoom=(el,s,z)=>{s.pz=Math.max(.5,Math.min(4,z));if(Math.abs(s.pz-1)<.02)s.pz=1;clearTimeout(el.__zt);el.__zt=setTimeout(()=>{pdfBuild(el,s);if(B)save();else sv()},120)};
-const xy=t=>ROT?toUI(t.clientX,t.clientY):[t.clientX,t.clientY];
-let P=null;
-const frameAt=(x,y)=>{const el=document.elementFromPoint(x,y),f=el&&el.closest&&el.closest('.ob');if(!f)return null;for(const[s,e]of OB)if(e===f&&s.k=='pdf')return{s,e};return null};
-document.addEventListener('touchstart',e=>{if(!B||B.tool!='hand'||e.touches.length!=2){return}
- const a=xy(e.touches[0]),b=xy(e.touches[1]),m=[(a[0]+b[0])/2,(a[1]+b[1])/2],fr=frameAt(m[0],m[1]);
- P={d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,fr,z0:fr?(fr.s.pz||1):BZ}},{capture:true,passive:true});
-document.addEventListener('touchmove',e=>{if(!P||e.touches.length!=2)return;if(e.cancelable)e.preventDefault();
- const a=xy(e.touches[0]),b=xy(e.touches[1]),k=(Math.hypot(a[0]-b[0],a[1]-b[1])||1)/P.d;
- if(P.fr)window.pdfZoom(P.fr.e,P.fr.s,P.z0*k);else setBZ(P.z0*k)},{capture:true,passive:false});
-['touchend','touchcancel'].forEach(n=>document.addEventListener(n,e=>{if(e.touches.length<2)P=null},true));
 /* التصدير بدون تكبير */
 const o9=out;out=async function(...a){const z=BZ;if(z!=1)setBZ(1);try{return await o9.apply(this,a)}finally{if(z!=1&&B)setBZ(z)}};
+})();
+
+/* ===== الإصدار 10 ===== */
+(()=>{
+const ew=$('ew'),st=document.createElement('style');
+st.textContent='html.hd #ew,html.hd #ew *{touch-action:none!important}';document.head.append(st);
+/* منع قائمة النسخ واللصق وتحديد الأزرار */
+const inEd=t=>t&&t.closest&&t.closest('input,textarea,[contenteditable=true]');
+addEventListener('contextmenu',e=>{if(!inEd(e.target))e.preventDefault()},true);
+document.addEventListener('selectstart',e=>{const t=e.target.nodeType==1?e.target:e.target.parentElement;if(t&&!inEd(t))e.preventDefault()},true);
+document.addEventListener('dblclick',e=>{if(!inEd(e.target))e.preventDefault()},true);
+const hand=()=>!!(B&&B.tool=='hand');
+setInterval(()=>document.documentElement.classList.toggle('hd',hand()),150);
+/* تمرير وتكبير باللمس برمجيًا (أداة الكف) */
+const xy=t=>ROT?toUI(t.clientX,t.clientY):[t.clientX,t.clientY];
+const frameAt=(x,y)=>{const el=document.elementFromPoint(x,y),f=el&&el.closest&&el.closest('.ob');if(!f)return null;for(const[s,e]of OB)if(e===f&&s.k=='pdf')return{s,e};return null};
+let T=null;
+document.addEventListener('touchstart',e=>{if(!hand()||!e.target.closest||!e.target.closest('#ew'))return;
+ if(e.touches.length==1){if(e.target.closest('video'))return;const a=xy(e.touches[0]);T={m:'pan',el:e.target.closest('.pdfc')||ew,x:a[0],y:a[1]}}
+ else if(e.touches.length==2){const a=xy(e.touches[0]),b=xy(e.touches[1]),fr=frameAt((a[0]+b[0])/2,(a[1]+b[1])/2);T={m:'pz',d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,fr,z0:fr?(fr.s.pz||1):BZ}}
+ else T=null},{capture:true,passive:true});
+document.addEventListener('touchmove',e=>{if(!T||!hand())return;if(e.cancelable)e.preventDefault();
+ if(T.m=='pan'&&e.touches.length==1){const a=xy(e.touches[0]);T.el.scrollTop-=a[1]-T.y;T.el.scrollLeft-=a[0]-T.x;T.x=a[0];T.y=a[1]}
+ else if(T.m=='pz'&&e.touches.length==2){const a=xy(e.touches[0]),b=xy(e.touches[1]),k=(Math.hypot(a[0]-b[0],a[1]-b[1])||1)/T.d;if(T.fr)window.pdfZoom(T.fr.e,T.fr.s,T.z0*k);else setBZ(T.z0*k)}},{capture:true,passive:false});
+['touchend','touchcancel'].forEach(n=>document.addEventListener(n,e=>{if(e.touches.length<2&&T&&T.m=='pz')T=null;if(!e.touches.length)T=null},true));
+/* تكبير PDF: إعادة رسم فورية وعرض النسبة */
+window.pdfZoom=(el,s,z)=>{s.pz=Math.max(.5,Math.min(4,z));if(Math.abs(s.pz-1)<.02)s.pz=1;
+ let l=el.querySelector('.zl');if(!l){l=document.createElement('div');l.className='zl';l.style.cssText='position:absolute;left:8px;bottom:8px;z-index:6;background:#000b;color:#fff;padding:3px 10px;border-radius:12px;font:700 13px system-ui;pointer-events:none';el.append(l)}
+ l.textContent=Math.round(s.pz*100)+'%';clearTimeout(l.__t);l.__t=setTimeout(()=>l.remove(),1500);
+ clearTimeout(el.__zt);el.__zt=setTimeout(()=>{pdfBuild(el,s);if(B)save();else sv();[200,700].forEach(t=>setTimeout(()=>{const d=el.style.display;el.style.display='none';void el.offsetHeight;el.style.display=d;try{redraw()}catch(x){}},t))},120)};
 })();
 </script></body></html>
