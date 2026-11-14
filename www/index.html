@@ -978,7 +978,7 @@ function audio(){W4('🔊 مشغّل صوت','',(s,d)=>{const au=new Audio();au.
 function spot(){if($('spl'))return;const o=document.createElement('div');o.id='spl';A().append(o);const mv=e=>{o.style.setProperty('--x',e.clientX+'px');o.style.setProperty('--y',e.clientY+'px')};document.addEventListener('pointermove',mv,true);document.addEventListener('pointerdown',mv,true);
  W4('🔦 تسليط ضوء','<div class="row">الحجم <input type="range" min="60" max="320" value="140" style="width:130px"></div>',(s,d)=>{s.querySelector('input').oninput=e=>o.style.setProperty('--r',e.target.value+'px');d.onclose=()=>{o.remove();document.removeEventListener('pointermove',mv,true);document.removeEventListener('pointerdown',mv,true)}})}
 /* ---------- قائمة الأدوات ---------- */
-const WL=[['🎲 نرد',dice],['🎡 عجلة الأسماء',wheel],['🏆 لوحة النقاط',score],['⏱ مؤقت / ساعة إيقاف',timer2],['🔊 مشغّل صوت ومكتبة',audio],['🔦 تسليط ضوء',spot],['🔔 مؤثرات صوتية',()=>sfxPop()]];
+const WL=window.__WL=[['🎲 نرد',dice],['🎡 عجلة الأسماء',wheel],['🏆 لوحة النقاط',score],['⏱ مؤقت / ساعة إيقاف',timer2],['🔊 مشغّل صوت ومكتبة',audio],['🔦 تسليط ضوء',spot],['🔔 مؤثرات صوتية',()=>sfxPop()]];
 function wdgPop(){const p=$('pp');p.innerHTML=WL.map(([l],i)=>'<button data-wi="'+i+'" style="font-size:16px">'+l+'</button>').join('');p.onpointerdown=null;p.onclick=e=>{const i=e.target.dataset.wi;if(i==null)return;p.hidden=true;WL[+i][1]()};showPop()}
 function sfxPop(){const p=$('pp');p.innerHTML=[['👏 تصفيق','clap'],['🔔 جرس','ding'],['✅ صح','ok'],['❌ خطأ','no'],['🥁 طبول','drum'],['📣 صافرة','whistle'],['⏰ منبّه','buzz']].map(([l,k])=>'<button data-sx="'+k+'" style="font-size:17px">'+l+'</button>').join('');p.onpointerdown=null;p.onclick=e=>{const k=e.target.dataset.sx;if(k)sfx(k)};showPop()}
 /* ---------- خلفيات ---------- */
@@ -1038,5 +1038,119 @@ const g0=geoPop;geoPop=function(){g0();const p=$('pp'),o=p.onclick;p.insertAdjac
  p.onclick=e=>{const k=e.target.dataset.w;if(k=='x_wdg'){wdgPop();return}if(k=='x_pg'){pagePop();return}if(k=='x_lock'){window.WLOCK=!window.WLOCK;p.hidden=true;alert(window.WLOCK?'تم قفل الكتابة: لن تظهر كتابات المشاركين':'أُعيد السماح للمشاركين بالكتابة');return}o(e)}};
 const om0=onMsg;onMsg=function(P,m){if(window.WLOCK&&(m.t=='a'||m.t=='sync'))return;return om0(P,m)};
 window.__v14={pgGo,pgAdd,pgDel,dice,wheel,score,timer2,audio,spot,wdgPop,bgPop,pagePop,get LS(){return LS}};
+})();
+/* ================= v15: بنك الأسئلة + الذكاء الاصطناعي + ألعاب ================= */
+(()=>{
+const st=document.createElement('style');st.textContent=`
+#qm{position:fixed;inset:0;z-index:8;background:#0f172af2;display:flex;align-items:center;justify-content:center;padding:8px;direction:rtl}
+#qm .card{background:#fff;border-radius:16px;width:min(760px,100%);max-height:96vh;overflow:auto;padding:14px;color:#0f172a}
+#qm h3{margin:0 0 8px;font-size:19px}#qm label{display:block;font-size:13px;margin:8px 0 3px;font-weight:700}
+#qm textarea,#qm input,#qm select{width:100%;box-sizing:border-box;font-size:15px;padding:8px;border:2px solid #cbd5e1;border-radius:10px;font-family:inherit;background:#fff;color:#0f172a}
+#qm .b{display:inline-block;margin:4px 3px;padding:10px 14px;border-radius:12px;border:0;background:#2563eb;color:#fff;font-size:15px;font-weight:700}
+#qm .b.g{background:#16a34a}#qm .b.r{background:#dc2626}#qm .b.s{background:#64748b}#qm .b.p{background:#7c3aed}
+#qm .opt{display:block;width:100%;text-align:right;margin:7px 0;padding:13px;border-radius:12px;border:3px solid #cbd5e1;background:#f8fafc;font-size:20px;color:#0f172a}
+#qm .opt.ok{background:#bbf7d0;border-color:#16a34a}#qm .opt.no{background:#fecaca;border-color:#dc2626}
+#qm .q{font-size:24px;font-weight:800;margin:6px 0 10px;line-height:1.5}
+#qm .it{border:1px solid #e2e8f0;border-radius:10px;padding:8px;margin:6px 0;font-size:15px}
+#qm .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}#qm .row>*{flex:1}
+#qm .mem{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#qm .cd{min-height:84px;border-radius:12px;background:#7c3aed;color:#fff;font-size:14px;padding:6px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700}
+#qm .cd.up{background:#fff;color:#0f172a;border:3px solid #7c3aed}#qm .cd.done{background:#bbf7d0;color:#14532d;border:3px solid #16a34a}
+#qm .tm{display:flex;gap:8px;margin:8px 0}#qm .tm>div{flex:1;text-align:center;border-radius:12px;padding:8px;color:#fff;font-weight:800;font-size:20px}
+#qm small{color:#64748b}`;
+document.head.append(st);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const QB=()=>S.qb||(S.qb=[]);
+const AI=()=>{S.ai=S.ai||{};if(!S.ai.url)S.ai.url='https://white-base-0c9a.aymanmofty.workers.dev';if(!S.ai.code)S.ai.code='sabora2026';if(!S.ai.dev)S.ai.dev=Math.random().toString(36).slice(2,12);return S.ai};
+const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const snd=k=>{try{window.sfx&&window.sfx(k)}catch(e){}};
+let M=null;
+function qm(html,card){if(!M){M=document.createElement('div');M.id='qm';document.body.append(M)}M.innerHTML='<div class="card">'+html+'</div>';return M.firstChild}
+function qclose(){if(M){M.remove();M=null}}
+const X='<button class="b s" data-c="x" style="float:left">✖ إغلاق</button>';
+const on=(fn)=>{M.onclick=e=>{const t=e.target.closest('[data-c]');if(!t)return;if(t.dataset.c=='x'){qclose();return}fn(t.dataset.c,t,e)}};
+
+/* ---- الصفحة الرئيسية ---- */
+function qhome(){qm(X+'<h3>🤖 أسئلة وألعاب</h3><button class="b" data-c="gen">🤖 توليد أسئلة بالذكاء الاصطناعي</button><br><button class="b p" data-c="bank">📚 بنك الأسئلة ('+QB().length+')</button><br><button class="b s" data-c="man">✍️ إضافة أسئلة يدوياً</button><br><button class="b s" data-c="cfg">⚙️ إعدادات الخادم</button>');
+ on(c=>{if(c=='gen')aiForm();else if(c=='bank')bank();else if(c=='man')manual();else if(c=='cfg')cfg()})}
+async function cfg(){const a=AI();const u=await ask('عنوان الخادم',a.url);if(u){a.url=u.trim()}const c=await ask('رمز الدعوة',a.code);if(c!=null)a.code=c.trim();persist();qhome()}
+
+/* ---- استخراج نص PDF ---- */
+const pdfs=()=>[...OB.values()].filter(el=>el&&el.pdf&&el.pdf.doc);
+async function pdfText(el,f,t){const d=el.pdf.doc;let o='';for(let i=f;i<=Math.min(t,d.numPages);i++){const p=await d.getPage(i),c=await p.getTextContent();o+='[صفحة '+i+']\n'+c.items.map(x=>x.str).join(' ')+'\n'}return o}
+
+/* ---- نموذج التوليد ---- */
+function aiForm(){const P=pdfs();
+ qm(X+'<h3>🤖 توليد أسئلة</h3><label>المصدر</label><select id="qs"><option value="topic">موضوع أكتبه</option><option value="text">نص ألصقه</option>'+(P.length?'<option value="pdf">ملف PDF مفتوح</option>':'')+'</select>'
+ +'<div id="qpd" hidden><label>الملف</label><select id="qpf">'+P.map((el,i)=>'<option value="'+i+'">ملف '+(i+1)+' ('+el.pdf.doc.numPages+' صفحة)</option>').join('')+'</select><div class="row"><div><label>من صفحة</label><input id="qp1" type="number" min="1" value="1"></div><div><label>إلى صفحة</label><input id="qp2" type="number" min="1" value="1"></div></div></div>'
+ +'<div id="qtx"><label id="qtl">اكتب الموضوع</label><textarea id="qt" rows="4" dir="auto" placeholder="مثال: الكسور العشرية"></textarea></div>'
+ +'<div class="row"><div><label>العدد</label><input id="qn" type="number" min="3" max="20" value="8"></div><div><label>النوع</label><select id="qk"><option value="mcq">اختيار من متعدد</option><option value="tf">صح وخطأ</option></select></div></div>'
+ +'<label>المستوى</label><input id="ql" dir="auto" placeholder="مثال: الصف السابع" value="'+esc(AI().lvl||'')+'">'
+ +'<div id="qe" style="color:#dc2626;margin:6px 0"></div><button class="b g" data-c="go">✨ ولّد</button><button class="b s" data-c="back">رجوع</button>');
+ const q=id=>M.querySelector('#'+id);q('qs').onchange=()=>{const v=q('qs').value;q('qpd').hidden=v!='pdf';q('qtx').hidden=v=='pdf';q('qtl').textContent=v=='topic'?'اكتب الموضوع':'ألصق النص'};
+ on(async(c,t)=>{if(c=='back'){qhome();return}if(c!='go')return;
+  const src=q('qs').value,n=Math.max(3,Math.min(20,+q('qn').value||8)),kind=q('qk').value,lvl=q('ql').value.trim();AI().lvl=lvl;persist();
+  let body='';const err=m=>{q('qe').textContent=m};t.disabled=true;t.textContent='⏳ جارٍ التوليد…';
+  try{if(src=='pdf'){const el=P[+q('qpf').value],f=+q('qp1').value||1,e2=Math.min(+q('qp2').value||f,f+9);body=await pdfText(el,f,e2);if(body.replace(/\[[^\]]*\]/g,'').trim().length<60){err('لا يوجد نص في هذه الصفحات (ربما الملف مصوَّر). جرّب صفحات أخرى أو الصق النص.');t.disabled=false;t.textContent='✨ ولّد';return}body=body.slice(0,20000)}
+   else{body=q('qt').value.trim();if(!body){err('اكتب الموضوع أو النص أولاً');t.disabled=false;t.textContent='✨ ولّد';return}}
+   const prompt=buildPrompt(src,body,n,kind,lvl);const txt=await aiCall(prompt);const arr=parseQ(txt,kind);if(!arr.length)throw new Error('لم أستطع فهم رد الذكاء الاصطناعي، أعد المحاولة');
+   review(arr,(src=='topic'?body.slice(0,30):src=='pdf'?'من PDF':'من نص'),kind)}
+  catch(e){err('⚠️ '+(e.message||e));t.disabled=false;t.textContent='✨ ولّد'}})}
+function buildPrompt(src,body,n,kind,lvl){const ty=kind=='tf'?'صح أو خطأ (الخياران بالترتيب: "صح" ثم "خطأ")':'اختيار من متعدد بأربعة خيارات';
+ return 'أنت معلم خبير. أنشئ '+n+' أسئلة من نوع '+ty+' بالعربية الفصحى الواضحة'+(lvl?' لمستوى: '+lvl:'')+'. '
+ +(src=='topic'?'الموضوع: '+body:'اعتمد على النص التالي فقط ولا تضف معلومات من خارجه:\n"""\n'+body+'\n"""')
+ +'\nأعد JSON فقط، مصفوفة عناصرها بالشكل {"q":"نص السؤال","opts":["..",".."],"a":رقم_الإجابة_الصحيحة_يبدأ_من_صفر,"src":"رقم الصفحة أو ملاحظة قصيرة أو فارغ"}. نوّع موضع الإجابة الصحيحة. يجب أن يكون الجواب الصحيح واحداً وصحيحاً علمياً. لا تكتب أي نص خارج JSON.'}
+async function aiCall(prompt){const a=AI();let r;try{r=await fetch(a.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,code:a.code,device:a.dev,json:1})})}catch(e){throw new Error('تعذر الاتصال بالخادم. تأكد من الإنترنت.')}
+ let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.error||('خطأ '+r.status));return d.text||''}
+function parseQ(t,kind){t=String(t).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();let a;try{a=JSON.parse(t)}catch(e){const m=t.match(/\[[\s\S]*\]/);if(!m)return[];try{a=JSON.parse(m[0])}catch(e2){return[]}}
+ if(a&&!Array.isArray(a)&&Array.isArray(a.questions))a=a.questions;if(!Array.isArray(a))return[];
+ return a.map(x=>{if(!x||!x.q)return null;let o=Array.isArray(x.opts)?x.opts.map(String):[];if(kind=='tf')o=['صح','خطأ'];let i=parseInt(x.a);if(!(o.length>=2&&i>=0&&i<o.length))return null;return{q:String(x.q),opts:o,a:i,src:x.src?String(x.src):''}}).filter(Boolean)}
+
+/* ---- مراجعة وحفظ ---- */
+function review(arr,title,kind){const draw=()=>{qm(X+'<h3>مراجعة الأسئلة ('+arr.length+')</h3><small>راجع الإجابات قبل الحفظ، فقد يخطئ الذكاء الاصطناعي.</small>'
+  +arr.map((x,i)=>'<div class="it"><b>'+(i+1)+'. '+esc(x.q)+'</b>'+x.opts.map((o,j)=>'<div style="'+(j==x.a?'color:#15803d;font-weight:800':'')+'">'+(j==x.a?'✔ ':'• ')+esc(o)+'</div>').join('')+(x.src?'<small>المصدر: '+esc(x.src)+'</small><br>':'')
+  +'<button class="b s" data-c="e'+i+'">✎ تعديل السؤال</button><button class="b s" data-c="a'+i+'">✔ غيّر الإجابة</button><button class="b r" data-c="d'+i+'">🗑</button></div>').join('')
+  +'<label>اسم المجموعة</label><input id="qtt" dir="auto" value="'+esc(title)+'"><button class="b g" data-c="save">💾 احفظ في البنك</button><button class="b s" data-c="back">رجوع</button>');
+  on(async c=>{const i=+c.slice(1);if(c=='back'){aiForm();return}
+   if(c=='save'){const tt=M.querySelector('#qtt').value.trim()||'أسئلة';if(!arr.length)return;QB().push({id:Date.now().toString(36),title:tt,items:arr});persist();snd('ok');bank();return}
+   if(c[0]=='d'){arr.splice(i,1);draw()}
+   else if(c[0]=='e'){const v=await ask('نص السؤال',arr[i].q);if(v){arr[i].q=v;draw()}}
+   else if(c[0]=='a'){const v=await ask('رقم الإجابة الصحيحة (1 إلى '+arr[i].opts.length+')',String(arr[i].a+1));const k=parseInt(v)-1;if(k>=0&&k<arr[i].opts.length){arr[i].a=k;draw()}}})};draw()}
+
+/* ---- إضافة يدوية ---- */
+function manual(){qm(X+'<h3>✍️ إضافة أسئلة يدوياً</h3><small>سطر لكل سؤال: السؤال | خيار1 | خيار2 | خيار3 | رقم الإجابة الصحيحة (في النهاية)<br>مثال: عاصمة فلسطين؟ | القدس | غزة | رام الله | 1</small><textarea id="qmt" rows="8" dir="auto"></textarea><label>اسم المجموعة</label><input id="qtt" dir="auto" value="أسئلتي"><div id="qe" style="color:#dc2626"></div><button class="b g" data-c="ok">معاينة</button><button class="b s" data-c="back">رجوع</button>');
+ on(c=>{if(c=='back'){qhome();return}const arr=[];M.querySelector('#qmt').value.split('\n').forEach(l=>{const p=l.split('|').map(s=>s.trim()).filter((s,i,a)=>s!==''||i<a.length);if(p.length<4)return;const k=parseInt(p[p.length-1])-1,o=p.slice(1,-1);if(o.length>=2&&k>=0&&k<o.length)arr.push({q:p[0],opts:o,a:k,src:''})});
+  if(!arr.length){M.querySelector('#qe').textContent='لم أجد أسئلة بالشكل الصحيح';return}review(arr,M.querySelector('#qtt').value||'أسئلتي')})}
+
+/* ---- البنك ---- */
+function bank(){const B2=QB();qm(X+'<h3>📚 بنك الأسئلة</h3>'+(B2.length?B2.map((s,i)=>'<div class="it"><b>'+esc(s.title)+'</b> <small>('+s.items.length+' سؤال)</small><br><button class="b g" data-c="p'+i+'">▶ العب</button><button class="b s" data-c="v'+i+'">👁 عرض</button><button class="b r" data-c="d'+i+'">🗑</button></div>').join(''):'<p>لا توجد مجموعات بعد.</p>')+'<button class="b" data-c="gen">🤖 توليد جديد</button><button class="b s" data-c="home">رجوع</button>');
+ on(async c=>{if(c=='home'){qhome();return}if(c=='gen'){aiForm();return}const i=+c.slice(1),s=B2[i];if(!s)return;
+  if(c[0]=='p')gamePick(s);else if(c[0]=='v')review(s.items,s.title);else if(c[0]=='d'){if(await ask('حذف المجموعة؟',null)){B2.splice(i,1);persist();bank()}}})}
+function gamePick(s){qm(X+'<h3>اختر اللعبة</h3><p>'+esc(s.title)+' — '+s.items.length+' سؤال</p><button class="b" data-c="q">❓ مسابقة فردية</button><br><button class="b p" data-c="t">⚔️ سباق فريقين</button><br><button class="b g" data-c="m">🧠 لعبة الذاكرة</button><br><button class="b s" data-c="b">رجوع</button>');
+ on(c=>{if(c=='b')bank();else if(c=='q')gQuiz(s);else if(c=='t')gTeam(s);else if(c=='m')gMem(s)})}
+
+/* ---- لعبة: مسابقة ---- */
+function optsOf(x){const o=x.opts.map((t,i)=>({t,ok:i==x.a}));return x.opts.length==2?o:shuf(o)}
+function gQuiz(s){const Q=shuf(s.items);let i=0,sc=0,done=0;const draw=()=>{if(i>=Q.length){snd('clap');qm(X+'<h3>🎉 انتهت المسابقة</h3><div class="q">النتيجة: '+sc+' من '+Q.length+'</div><button class="b" data-c="r">🔁 مرة أخرى</button><button class="b s" data-c="b">رجوع</button>');on(c=>{if(c=='r')gQuiz(s);else gamePick(s)});return}
+  const x=Q[i],o=optsOf(x);done=0;qm(X+'<small>سؤال '+(i+1)+' / '+Q.length+' — النقاط: '+sc+'</small><div class="q">'+esc(x.q)+'</div>'+o.map((z,j)=>'<button class="opt" data-c="o'+j+'">'+esc(z.t)+'</button>').join('')+'<div id="nx"></div>');
+  on((c,t)=>{if(c=='n'){i++;draw();return}if(c[0]!='o'||done)return;done=1;const z=o[+c.slice(1)];[...M.querySelectorAll('.opt')].forEach((b,j)=>{if(o[j].ok)b.classList.add('ok')});if(z.ok){sc++;snd('ok')}else{t.classList.add('no');snd('no')}
+   M.querySelector('#nx').innerHTML='<button class="b g" data-c="n">التالي ◀</button>'})};draw()}
+/* ---- لعبة: سباق فريقين ---- */
+function gTeam(s){const Q=shuf(s.items);let i=0,A=0,Bt=0;const n1=(S.t1||'الفريق الأحمر'),n2=(S.t2||'الفريق الأزرق');
+ const head=()=>'<div class="tm"><div style="background:#dc2626">'+esc(n1)+'<br>'+A+'</div><div style="background:#2563eb">'+esc(n2)+'<br>'+Bt+'</div></div>';
+ const draw=()=>{if(i>=Q.length){snd('clap');qm(X+'<h3>'+(A==Bt?'🤝 تعادل':'🏆 الفائز: '+esc(A>Bt?n1:n2))+'</h3>'+head()+'<button class="b" data-c="r">🔁 مرة أخرى</button><button class="b s" data-c="b">رجوع</button>');on(c=>{if(c=='r')gTeam(s);else gamePick(s)});return}
+  const x=Q[i];qm(X+head()+'<small>سؤال '+(i+1)+' / '+Q.length+'</small><div class="q">'+esc(x.q)+'</div>'+x.opts.map((t,j)=>'<div class="opt" id="o'+j+'">'+esc(t)+'</div>').join('')+'<div id="ac"><button class="b s" data-c="rv">👁 أظهر الإجابة</button></div>');
+  on(c=>{if(c=='rv'){M.querySelector('#o'+x.a).classList.add('ok');M.querySelector('#ac').innerHTML='<button class="b" style="background:#dc2626" data-c="a">✔ '+esc(n1)+'</button><button class="b" data-c="b2">✔ '+esc(n2)+'</button><button class="b s" data-c="z">لا أحد</button>'}
+   else if(c=='a'){A++;snd('ok');i++;draw()}else if(c=='b2'){Bt++;snd('ok');i++;draw()}else if(c=='z'){snd('no');i++;draw()}})};draw()}
+/* ---- لعبة: ذاكرة ---- */
+function gMem(s){const P=shuf(s.items).slice(0,6);const cards=shuf(P.flatMap((x,i)=>[{p:i,t:x.q},{p:i,t:x.opts[x.a]}]));let first=null,lock=0,moves=0,found=0;
+ qm(X+'<small>طابق كل سؤال مع إجابته — المحاولات: <span id="mv">0</span></small><div class="mem">'+cards.map((c,i)=>'<div class="cd" data-c="c'+i+'">❓</div>').join('')+'</div>');
+ on((c,t)=>{if(c[0]!='c'||lock)return;const i=+c.slice(1),k=cards[i];if(t.classList.contains('up')||t.classList.contains('done'))return;t.classList.add('up');t.textContent=k.t;snd('tick');
+  if(first==null){first=i;return}const f=first;first=null;moves++;M.querySelector('#mv').textContent=moves;const ft=M.querySelectorAll('.cd')[f];
+  if(cards[f].p==k.p){[ft,t].forEach(z=>{z.classList.remove('up');z.classList.add('done')});snd('ok');if(++found==P.length){snd('clap');setTimeout(()=>{qm(X+'<h3>🎉 أحسنت!</h3><div class="q">أنهيتها في '+moves+' محاولة</div><button class="b" data-c="r">🔁 مرة أخرى</button><button class="b s" data-c="b">رجوع</button>');on(c2=>{if(c2=='r')gMem(s);else gamePick(s)})},600)}}
+  else{lock=1;snd('no');setTimeout(()=>{[ft,t].forEach(z=>{z.classList.remove('up');z.textContent='❓'});lock=0},1100)}})}
+
+window.__WL.push(['🤖 أسئلة وألعاب',qhome]);
+window.__v15={qhome,aiForm,bank,gQuiz,gTeam,gMem,parseQ,buildPrompt,review,QB,qclose};
 })();
 </script></body></html>
