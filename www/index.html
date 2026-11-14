@@ -1093,15 +1093,16 @@ function aiForm(){const P=pdfs();
   let body='';const err=m=>{q('qe').textContent=m};t.disabled=true;t.textContent='⏳ جارٍ التوليد…';
   try{if(src=='pdf'){const el=P[+q('qpf').value],f=+q('qp1').value||1,e2=Math.min(+q('qp2').value||f,f+9);body=await pdfText(el,f,e2);if(body.replace(/\[[^\]]*\]/g,'').trim().length<60){err('لا يوجد نص في هذه الصفحات (ربما الملف مصوَّر). جرّب صفحات أخرى أو الصق النص.');t.disabled=false;t.textContent='✨ ولّد';return}body=body.slice(0,20000)}
    else{body=q('qt').value.trim();if(!body){err('اكتب الموضوع أو النص أولاً');t.disabled=false;t.textContent='✨ ولّد';return}}
-   const prompt=buildPrompt(src,body,n,kind,lvl);const txt=await aiCall(prompt);const arr=parseQ(txt,kind);if(!arr.length)throw new Error('لم أستطع فهم رد الذكاء الاصطناعي، أعد المحاولة');
+   const prompt=buildPrompt(src,body,n,kind,lvl);const txt=await aiCall(prompt,n=>{t.textContent='⏳ مزدحم… إعادة المحاولة '+n+'/3'});const arr=parseQ(txt,kind);if(!arr.length)throw new Error('لم أستطع فهم رد الذكاء الاصطناعي، أعد المحاولة');
    review(arr,(src=='topic'?body.slice(0,30):src=='pdf'?'من PDF':'من نص'),kind)}
   catch(e){err('⚠️ '+(e.message||e));t.disabled=false;t.textContent='✨ ولّد'}})}
 function buildPrompt(src,body,n,kind,lvl){const ty=kind=='tf'?'صح أو خطأ (الخياران بالترتيب: "صح" ثم "خطأ")':'اختيار من متعدد بأربعة خيارات';
  return 'أنت معلم خبير. أنشئ '+n+' أسئلة من نوع '+ty+' بالعربية الفصحى الواضحة'+(lvl?' لمستوى: '+lvl:'')+'. '
  +(src=='topic'?'الموضوع: '+body:'اعتمد على النص التالي فقط ولا تضف معلومات من خارجه:\n"""\n'+body+'\n"""')
  +'\nأعد JSON فقط، مصفوفة عناصرها بالشكل {"q":"نص السؤال","opts":["..",".."],"a":رقم_الإجابة_الصحيحة_يبدأ_من_صفر,"src":"رقم الصفحة أو ملاحظة قصيرة أو فارغ"}. نوّع موضع الإجابة الصحيحة. يجب أن يكون الجواب الصحيح واحداً وصحيحاً علمياً. لا تكتب أي نص خارج JSON.'}
-async function aiCall(prompt){const a=AI();let r;try{r=await fetch(a.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,code:a.code,device:a.dev,json:1})})}catch(e){throw new Error('تعذر الاتصال بالخادم. تأكد من الإنترنت.')}
- let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.error||('خطأ '+r.status));return d.text||''}
+async function aiCall(prompt,onRetry){const a=AI();let last='';for(let k=0;k<4;k++){let r,d={};try{r=await fetch(a.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,code:a.code,device:a.dev,json:1})})}catch(e){last='تعذر الاتصال بالخادم. تأكد من الإنترنت.';if(k<3){onRetry&&onRetry(k+1);await new Promise(z=>setTimeout(z,2500));continue}throw new Error(last)}
+ try{d=await r.json()}catch(e){}if(r.ok)return d.text||'';last=d.error||('خطأ '+r.status);const busy=r.status==503||r.status==500||/demand|overload|unavailable|try again/i.test(last);if(busy&&k<3){onRetry&&onRetry(k+1);await new Promise(z=>setTimeout(z,2500*(k+1)));continue}
+  if(busy)last='النموذج مزدحم الآن، جرّب بعد دقائق.';throw new Error(last)}throw new Error(last)}
 function parseQ(t,kind){t=String(t).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();let a;try{a=JSON.parse(t)}catch(e){const m=t.match(/\[[\s\S]*\]/);if(!m)return[];try{a=JSON.parse(m[0])}catch(e2){return[]}}
  if(a&&!Array.isArray(a)&&Array.isArray(a.questions))a=a.questions;if(!Array.isArray(a))return[];
  return a.map(x=>{if(!x||!x.q)return null;let o=Array.isArray(x.opts)?x.opts.map(String):[];if(kind=='tf')o=['صح','خطأ'];let i=parseInt(x.a);if(!(o.length>=2&&i>=0&&i<o.length))return null;return{q:String(x.q),opts:o,a:i,src:x.src?String(x.src):''}}).filter(Boolean)}
