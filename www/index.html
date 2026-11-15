@@ -934,8 +934,8 @@ const st=document.createElement('style');st.textContent=`
 document.head.append(st);
 /* ---------- بنية الودجت ---------- */
 function W4(title,html,init){const d=document.createElement('div');d.className='w4';d.style.left=60+Math.random()*50+'px';d.style.top=130+Math.random()*50+'px';
- d.innerHTML='<header><b>⠿</b><span>'+title+'</span><i class="z" data-a="+">＋</i><i class="z" data-a="-">－</i><i class="z" data-a="x">✖</i></header><section>'+html+'</section>';A().append(d);d.sc=1;
- const h=d.firstChild;h.onpointerdown=e=>{const a=e.target.dataset.a;if(a){e.preventDefault();if(a=='x'){d.onclose&&d.onclose();d.remove()}else{d.sc=Math.max(.6,Math.min(2.2,d.sc*(a=='+'?1.2:1/1.2)));d.style.transform='scale('+d.sc+')'}return}
+ d.innerHTML='<header><b>⠿</b><span>'+title+'</span><i class="z" data-a="m">🗕</i><i class="z" data-a="+">＋</i><i class="z" data-a="-">－</i><i class="z" data-a="x">✖</i></header><section>'+html+'</section>';A().append(d);d.sc=1;
+ const h=d.firstChild;h.onpointerdown=e=>{const a=e.target.dataset.a;if(a){e.preventDefault();if(a=='x'){d.onclose&&d.onclose();d.remove()}else if(a=='m'){window.__mini&&window.__mini(d)}else{d.sc=Math.max(.6,Math.min(2.2,d.sc*(a=='+'?1.2:1/1.2)));d.style.transform='scale('+d.sc+')'}return}
   h.setPointerCapture(e.pointerId);const ox=e.clientX-d.offsetLeft,oy=e.clientY-d.offsetTop;h.onpointermove=m=>{d.style.left=m.clientX-ox+'px';d.style.top=m.clientY-oy+'px'};h.onpointerup=h.onpointercancel=()=>h.onpointermove=null};
  init&&init(d.querySelector('section'),d);return d}
 setInterval(()=>{const on=!!B;document.querySelectorAll('.w4,#spl').forEach(x=>x.style.display=on?'':'none');pill.hidden=!B;if(B){const n=cur();pill.textContent='📄 '+((n&&n.pi||0)+1)+'/'+((n&&n.pgs&&n.pgs.length)||1)}},400);
@@ -965,7 +965,7 @@ function timer2(){W4('⏱ مؤقت','<div class="big">05:00</div><div class="row
 /* ---------- مشغل صوت ومكتبة ---------- */
 const fa=document.createElement('input');fa.type='file';fa.id='faud';fa.accept='audio/*';fa.hidden=true;document.body.append(fa);let AT=null;
 fa.onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f||!AT)return;if(f.size>80e6)return alert('الملف كبير (الحد 80MB)');const id=uid();await kv('w','a_'+id,f);(S.aud=S.aud||[]).push({id,name:f.name.replace(/\.[^.]+$/,'')});persist();AT.load(f,S.aud[S.aud.length-1].name)};
-function audio(){W4('🔊 مشغّل صوت','',(s,d)=>{const au=new Audio();au.preload='auto';let nm='لا يوجد ملف';const fmt=v=>Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0');
+function audio(){W4('🔊 مشغّل صوت','',(s,d)=>{const au=new Audio();d.au=au;au.preload='auto';let nm='لا يوجد ملف';const fmt=v=>Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0');
  const ui=()=>{s.innerHTML='<div style="font-size:14px;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(nm)+'</div><div class="row"><button data-a="p">'+(au.paused?'▶':'⏸')+'</button><input type="range" class="ap" min="0" max="1000" value="0" style="width:120px"><span class="at">0:00</span></div><div class="row">🔉<input type="range" class="av" min="0" max="100" value="'+Math.round(au.volume*100)+'" style="width:80px"><button data-a="l" style="'+(au.loop?'background:#bbf7d0':'')+'">🔁</button><button data-a="f">📂 ملف</button><button data-a="b">📚 المكتبة</button></div>'};
  d.load=(f,name)=>{au.src=URL.createObjectURL(f);nm=name;au.play().catch(()=>{});ui()};au.volume=.8;ui();d.onclose=()=>au.pause();
  au.ontimeupdate=()=>{const ap=s.querySelector('.ap');if(ap&&!ap.dragging&&au.duration){ap.value=au.currentTime/au.duration*1000}const at=s.querySelector('.at');if(at)at.textContent=fmt(au.currentTime)+'/'+fmt(au.duration||0)};au.onended=()=>ui();
@@ -1046,18 +1046,23 @@ const st=document.createElement('style');st.textContent=`
 #qm .card{background:#fff;border-radius:16px;width:min(760px,100%);max-height:96vh;overflow:auto;padding:14px;color:#0f172a}
 #qm h3{margin:0 0 8px;font-size:19px}#qm label{display:block;font-size:13px;margin:8px 0 3px;font-weight:700}
 #qm textarea,#qm input,#qm select{width:100%;box-sizing:border-box;font-size:15px;padding:8px;border:2px solid #cbd5e1;border-radius:10px;font-family:inherit;background:#fff;color:#0f172a}
-#qm .b{display:inline-block;margin:4px 3px;padding:10px 14px;border-radius:12px;border:0;background:#2563eb;color:#fff;font-size:15px;font-weight:700}
+#qm .b{display:block;width:100%;margin:6px 0;padding:11px 14px;border-radius:12px;border:0;background:#2563eb;color:#fff;font-size:15px;font-weight:700}
 #qm .b.g{background:#16a34a}#qm .b.r{background:#dc2626}#qm .b.s{background:#64748b}#qm .b.p{background:#7c3aed}
 #qm .opt{display:block;width:100%;text-align:right;margin:7px 0;padding:13px;border-radius:12px;border:3px solid #cbd5e1;background:#f8fafc;font-size:20px;color:#0f172a}
 #qm .opt.ok{background:#bbf7d0;border-color:#16a34a}#qm .opt.no{background:#fecaca;border-color:#dc2626}
 #qm .q{font-size:24px;font-weight:800;margin:6px 0 10px;line-height:1.5}
 #qm .it{border:1px solid #e2e8f0;border-radius:10px;padding:8px;margin:6px 0;font-size:15px}
 #qm .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}#qm .row>*{flex:1}
-#qm .mem{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#qm .mem{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 #qm .cd{min-height:84px;border-radius:12px;background:#7c3aed;color:#fff;font-size:14px;padding:6px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700}
 #qm .cd.up{background:#fff;color:#0f172a;border:3px solid #7c3aed}#qm .cd.done{background:#bbf7d0;color:#14532d;border:3px solid #16a34a}
-#qm .tm{display:flex;gap:8px;margin:8px 0}#qm .tm>div{flex:1;text-align:center;border-radius:12px;padding:8px;color:#fff;font-weight:800;font-size:20px}
-#qm small{color:#64748b}`;
+#qm .tm{display:flex;flex-direction:column;gap:6px;margin:8px 0}#qm .tm>div{text-align:center;border-radius:12px;padding:8px;color:#fff;font-weight:800;font-size:20px}
+#qm small{color:#64748b}
+#qm .xx{display:inline-block;width:auto;float:left;margin:0;padding:8px 12px}
+#qm .seg{display:flex;flex-direction:column;gap:6px}#qm .seg .o{padding:10px;border-radius:12px;border:2px solid #cbd5e1;background:#fff;color:#0f172a;font-size:17px;font-weight:700}#qm .seg .o.a{background:#2563eb;color:#fff;border-color:#2563eb}
+#qm .step{display:flex;gap:8px;align-items:center}#qm .step button{flex:0 0 64px;padding:8px;border-radius:12px;border:2px solid #cbd5e1;background:#fff;font-size:22px;color:#0f172a}#qm .step b{flex:1;text-align:center;font-size:22px}
+#qm .err{color:#dc2626;font-size:15px;margin:6px 0;font-weight:700}
+#qm .ac3{display:flex;gap:6px}#qm .ac3 .b{flex:1;margin:4px 0;padding:8px 4px;font-size:16px}`;
 document.head.append(st);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const QB=()=>S.qb||(S.qb=[]);
@@ -1067,11 +1072,11 @@ const snd=k=>{try{window.sfx&&window.sfx(k)}catch(e){}};
 let M=null;
 function qm(html,card){if(!M){M=document.createElement('div');M.id='qm';document.body.append(M)}M.innerHTML='<div class="card">'+html+'</div>';return M.firstChild}
 function qclose(){if(M){M.remove();M=null}}
-const X='<button class="b s" data-c="x" style="float:left">✖ إغلاق</button>';
+const X='<button class="b s xx" data-c="x">✖ إغلاق</button>';
 const on=(fn)=>{M.onclick=e=>{const t=e.target.closest('[data-c]');if(!t)return;if(t.dataset.c=='x'){qclose();return}fn(t.dataset.c,t,e)}};
 
 /* ---- الصفحة الرئيسية ---- */
-function qhome(){qm(X+'<h3>🤖 أسئلة وألعاب</h3><button class="b" data-c="gen">🤖 توليد أسئلة بالذكاء الاصطناعي</button><br><button class="b p" data-c="bank">📚 بنك الأسئلة ('+QB().length+')</button><br><button class="b s" data-c="man">✍️ إضافة أسئلة يدوياً</button><br><button class="b s" data-c="cfg">⚙️ إعدادات الخادم</button>');
+function qhome(){qm(X+'<h3>🤖 أسئلة وألعاب</h3><button class="b" data-c="gen">🤖 توليد أسئلة بالذكاء الاصطناعي</button><button class="b p" data-c="bank">📚 بنك الأسئلة ('+QB().length+')</button><button class="b s" data-c="man">✍️ إضافة أسئلة يدوياً</button><button class="b s" data-c="cfg">⚙️ إعدادات الخادم</button>');
  on(c=>{if(c=='gen')aiForm();else if(c=='bank')bank();else if(c=='man')manual();else if(c=='cfg')cfg()})}
 async function cfg(){const a=AI();const u=await ask('عنوان الخادم',a.url);if(u){a.url=u.trim()}const c=await ask('رمز الدعوة',a.code);if(c!=null)a.code=c.trim();persist();qhome()}
 
@@ -1080,22 +1085,30 @@ const pdfs=()=>[...OB.values()].filter(el=>el&&el.pdf&&el.pdf.doc);
 async function pdfText(el,f,t){const d=el.pdf.doc;let o='';for(let i=f;i<=Math.min(t,d.numPages);i++){const p=await d.getPage(i),c=await p.getTextContent();o+='[صفحة '+i+']\n'+c.items.map(x=>x.str).join(' ')+'\n'}return o}
 
 /* ---- نموذج التوليد ---- */
-function aiForm(){const P=pdfs();
- qm(X+'<h3>🤖 توليد أسئلة</h3><label>المصدر</label><select id="qs"><option value="topic">موضوع أكتبه</option><option value="text">نص ألصقه</option>'+(P.length?'<option value="pdf">ملف PDF مفتوح</option>':'')+'</select>'
- +'<div id="qpd" hidden><label>الملف</label><select id="qpf">'+P.map((el,i)=>'<option value="'+i+'">ملف '+(i+1)+' ('+el.pdf.doc.numPages+' صفحة)</option>').join('')+'</select><div class="row"><div><label>من صفحة</label><input id="qp1" type="number" min="1" value="1"></div><div><label>إلى صفحة</label><input id="qp2" type="number" min="1" value="1"></div></div></div>'
- +'<div id="qtx"><label id="qtl">اكتب الموضوع</label><textarea id="qt" rows="4" dir="auto" placeholder="مثال: الكسور العشرية"></textarea></div>'
- +'<div class="row"><div><label>العدد</label><input id="qn" type="number" min="3" max="20" value="8"></div><div><label>النوع</label><select id="qk"><option value="mcq">اختيار من متعدد</option><option value="tf">صح وخطأ</option></select></div></div>'
- +'<label>المستوى</label><input id="ql" dir="auto" placeholder="مثال: الصف السابع" value="'+esc(AI().lvl||'')+'">'
- +'<div id="qe" style="color:#dc2626;margin:6px 0"></div><button class="b g" data-c="go">✨ ولّد</button><button class="b s" data-c="back">رجوع</button>');
- const q=id=>M.querySelector('#'+id);q('qs').onchange=()=>{const v=q('qs').value;q('qpd').hidden=v!='pdf';q('qtx').hidden=v=='pdf';q('qtl').textContent=v=='topic'?'اكتب الموضوع':'ألصق النص'};
- on(async(c,t)=>{if(c=='back'){qhome();return}if(c!='go')return;
-  const src=q('qs').value,n=Math.max(3,Math.min(20,+q('qn').value||8)),kind=q('qk').value,lvl=q('ql').value.trim();AI().lvl=lvl;persist();
-  let body='';const err=m=>{q('qe').textContent=m};t.disabled=true;t.textContent='⏳ جارٍ التوليد…';
-  try{if(src=='pdf'){const el=P[+q('qpf').value],f=+q('qp1').value||1,e2=Math.min(+q('qp2').value||f,f+9);body=await pdfText(el,f,e2);if(body.replace(/\[[^\]]*\]/g,'').trim().length<60){err('لا يوجد نص في هذه الصفحات (ربما الملف مصوَّر). جرّب صفحات أخرى أو الصق النص.');t.disabled=false;t.textContent='✨ ولّد';return}body=body.slice(0,20000)}
-   else{body=q('qt').value.trim();if(!body){err('اكتب الموضوع أو النص أولاً');t.disabled=false;t.textContent='✨ ولّد';return}}
-   const prompt=buildPrompt(src,body,n,kind,lvl);const txt=await aiCall(prompt,n=>{t.textContent='⏳ مزدحم… إعادة المحاولة '+n+'/3'});const arr=parseQ(txt,kind);if(!arr.length)throw new Error('لم أستطع فهم رد الذكاء الاصطناعي، أعد المحاولة');
+function aiForm(){const P=pdfs();let src='topic',kind='mcq',n=AI().n||8,pf=0;
+ const seg=(id,arr)=>'<div class="seg" id="'+id+'">'+arr.map(([v,l],i)=>'<button class="o'+(i==0?' a':'')+'" data-c="'+id+':'+v+'">'+l+'</button>').join('')+'</div>';
+ qm(X+'<h3>🤖 توليد أسئلة</h3><label>١) المصدر</label>'+seg('s1',[['topic','موضوع أكتبه'],['text','نص ألصقه']].concat(P.length?[['pdf','ملف PDF مفتوح']]:[]))
+ +'<div id="qpd" hidden><label>الملف</label>'+seg('sf',P.map((el,i)=>[String(i),'ملف '+(i+1)+' ('+el.pdf.doc.numPages+' صفحة)']))+'<label>من صفحة</label><input id="qp1" type="number" min="1" value="1"><label>إلى صفحة (حتى 10 صفحات)</label><input id="qp2" type="number" min="1" value="1"></div>'
+ +'<div id="qtx"><label id="qtl">٢) اكتب الموضوع</label><textarea id="qt" rows="3" dir="auto" placeholder="مثال: الكسور العشرية"></textarea></div>'
+ +'<label>٣) العدد</label><div class="step"><button data-c="n+">＋</button><b id="qnv">'+n+'</b><button data-c="n-">－</button></div>'
+ +'<label>٤) النوع</label>'+seg('s2',[['mcq','اختيار من متعدد'],['tf','صح وخطأ']])
+ +'<label>٥) المستوى</label><input id="ql" dir="auto" placeholder="مثال: الصف السابع" value="'+esc(AI().lvl||'')+'">'
+ +'<div id="qe" class="err"></div><button class="b g" data-c="go">✨ ولّد الأسئلة</button><button class="b s" data-c="back">رجوع</button>');
+ const q=id=>M.querySelector('#'+id),setA=(id,v)=>M.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('a',b.dataset.c==id+':'+v));
+ on(async(c,t)=>{
+  if(c=='back'){qhome();return}
+  if(c.startsWith('s1:')){src=c.slice(3);setA('s1',src);q('qpd').hidden=src!='pdf';q('qtx').hidden=src=='pdf';q('qtl').textContent=src=='topic'?'٢) اكتب الموضوع':'٢) ألصق النص';return}
+  if(c.startsWith('sf:')){pf=+c.slice(3);setA('sf',pf);return}
+  if(c.startsWith('s2:')){kind=c.slice(3);setA('s2',kind);return}
+  if(c=='n-'||c=='n+'){n=Math.max(3,Math.min(20,n+(c=='n+'?1:-1)));q('qnv').textContent=n;AI().n=n;persist();return}
+  if(c!='go')return;
+  const lvl=q('ql').value.trim();AI().lvl=lvl;persist();
+  let body='';const err=m=>{q('qe').textContent=m},reset=()=>{t.disabled=false;t.textContent='✨ ولّد الأسئلة'};t.disabled=true;t.textContent='⏳ جارٍ التوليد…';
+  try{if(src=='pdf'){const el=P[pf],f=+q('qp1').value||1,e2=Math.min(+q('qp2').value||f,f+9);body=await pdfText(el,f,e2);if(body.replace(/\[[^\]]*\]/g,'').trim().length<60){err('لا يوجد نص في هذه الصفحات (ربما الملف مصوَّر). جرّب صفحات أخرى أو الصق النص.');reset();return}body=body.slice(0,20000)}
+   else{body=q('qt').value.trim();if(!body){err('اكتب الموضوع أو النص أولاً');reset();return}}
+   const prompt=buildPrompt(src,body,n,kind,lvl);const txt=await aiCall(prompt,k=>{t.textContent='⏳ مزدحم… إعادة المحاولة '+k+'/3'});const arr=parseQ(txt,kind);if(!arr.length)throw new Error('لم أستطع فهم رد الذكاء الاصطناعي، أعد المحاولة');
    review(arr,(src=='topic'?body.slice(0,30):src=='pdf'?'من PDF':'من نص'),kind)}
-  catch(e){err('⚠️ '+(e.message||e));t.disabled=false;t.textContent='✨ ولّد'}})}
+  catch(e){err('⚠️ '+(e.message||e));reset()}})}
 function buildPrompt(src,body,n,kind,lvl){const ty=kind=='tf'?'صح أو خطأ (الخياران بالترتيب: "صح" ثم "خطأ")':'اختيار من متعدد بأربعة خيارات';
  return 'أنت معلم خبير. أنشئ '+n+' أسئلة من نوع '+ty+' بالعربية الفصحى الواضحة'+(lvl?' لمستوى: '+lvl:'')+'. '
  +(src=='topic'?'الموضوع: '+body:'اعتمد على النص التالي فقط ولا تضف معلومات من خارجه:\n"""\n'+body+'\n"""')
@@ -1110,7 +1123,7 @@ function parseQ(t,kind){t=String(t).trim().replace(/^```(?:json)?/i,'').replace(
 /* ---- مراجعة وحفظ ---- */
 function review(arr,title,kind){const draw=()=>{qm(X+'<h3>مراجعة الأسئلة ('+arr.length+')</h3><small>راجع الإجابات قبل الحفظ، فقد يخطئ الذكاء الاصطناعي.</small>'
   +arr.map((x,i)=>'<div class="it"><b>'+(i+1)+'. '+esc(x.q)+'</b>'+x.opts.map((o,j)=>'<div style="'+(j==x.a?'color:#15803d;font-weight:800':'')+'">'+(j==x.a?'✔ ':'• ')+esc(o)+'</div>').join('')+(x.src?'<small>المصدر: '+esc(x.src)+'</small><br>':'')
-  +'<button class="b s" data-c="e'+i+'">✎ تعديل السؤال</button><button class="b s" data-c="a'+i+'">✔ غيّر الإجابة</button><button class="b r" data-c="d'+i+'">🗑</button></div>').join('')
+  +'<div class="ac3"><button class="b s" data-c="e'+i+'">✎ السؤال</button><button class="b s" data-c="a'+i+'">✔ الإجابة</button><button class="b r" data-c="d'+i+'">🗑</button></div></div>').join('')
   +'<label>اسم المجموعة</label><input id="qtt" dir="auto" value="'+esc(title)+'"><button class="b g" data-c="save">💾 احفظ في البنك</button><button class="b s" data-c="back">رجوع</button>');
   on(async c=>{const i=+c.slice(1);if(c=='back'){aiForm();return}
    if(c=='save'){const tt=M.querySelector('#qtt').value.trim()||'أسئلة';if(!arr.length)return;QB().push({id:Date.now().toString(36),title:tt,items:arr});persist();snd('ok');bank();return}
@@ -1124,10 +1137,10 @@ function manual(){qm(X+'<h3>✍️ إضافة أسئلة يدوياً</h3><small
   if(!arr.length){M.querySelector('#qe').textContent='لم أجد أسئلة بالشكل الصحيح';return}review(arr,M.querySelector('#qtt').value||'أسئلتي')})}
 
 /* ---- البنك ---- */
-function bank(){const B2=QB();qm(X+'<h3>📚 بنك الأسئلة</h3>'+(B2.length?B2.map((s,i)=>'<div class="it"><b>'+esc(s.title)+'</b> <small>('+s.items.length+' سؤال)</small><br><button class="b g" data-c="p'+i+'">▶ العب</button><button class="b s" data-c="v'+i+'">👁 عرض</button><button class="b r" data-c="d'+i+'">🗑</button></div>').join(''):'<p>لا توجد مجموعات بعد.</p>')+'<button class="b" data-c="gen">🤖 توليد جديد</button><button class="b s" data-c="home">رجوع</button>');
+function bank(){const B2=QB();qm(X+'<h3>📚 بنك الأسئلة</h3>'+(B2.length?B2.map((s,i)=>'<div class="it"><b>'+esc(s.title)+'</b> <small>('+s.items.length+' سؤال)</small><div class="ac3"><button class="b g" data-c="p'+i+'">▶ العب</button><button class="b s" data-c="v'+i+'">👁 عرض</button><button class="b r" data-c="d'+i+'">🗑</button></div></div>').join(''):'<p>لا توجد مجموعات بعد.</p>')+'<button class="b" data-c="gen">🤖 توليد جديد</button><button class="b s" data-c="home">رجوع</button>');
  on(async c=>{if(c=='home'){qhome();return}if(c=='gen'){aiForm();return}const i=+c.slice(1),s=B2[i];if(!s)return;
   if(c[0]=='p')gamePick(s);else if(c[0]=='v')review(s.items,s.title);else if(c[0]=='d'){if(await ask('حذف المجموعة؟',null)){B2.splice(i,1);persist();bank()}}})}
-function gamePick(s){qm(X+'<h3>اختر اللعبة</h3><p>'+esc(s.title)+' — '+s.items.length+' سؤال</p><button class="b" data-c="q">❓ مسابقة فردية</button><br><button class="b p" data-c="t">⚔️ سباق فريقين</button><br><button class="b g" data-c="m">🧠 لعبة الذاكرة</button><br><button class="b s" data-c="b">رجوع</button>');
+function gamePick(s){qm(X+'<h3>اختر اللعبة</h3><p>'+esc(s.title)+' — '+s.items.length+' سؤال</p><button class="b" data-c="q">❓ مسابقة فردية</button><button class="b p" data-c="t">⚔️ سباق فريقين</button><button class="b g" data-c="m">🧠 لعبة الذاكرة</button><button class="b s" data-c="b">رجوع</button>');
  on(c=>{if(c=='b')bank();else if(c=='q')gQuiz(s);else if(c=='t')gTeam(s);else if(c=='m')gMem(s)})}
 
 /* ---- لعبة: مسابقة ---- */
@@ -1153,5 +1166,92 @@ function gMem(s){const P=shuf(s.items).slice(0,6);const cards=shuf(P.flatMap((x,
 
 window.__WL.push(['🤖 أسئلة وألعاب',qhome]);
 window.__v15={qhome,aiForm,bank,gQuiz,gTeam,gMem,parseQ,buildPrompt,review,QB,qclose};
+})();
+/* ================= v16: الشريط السريع + إخفاء الأدوات + تصغير الأدوات ================= */
+(()=>{
+const st=document.createElement('style');st.textContent=`
+#mv,#dn{display:none!important}
+#qb{display:none}
+body.bm #qb{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%;padding:4px 6px;background:var(--bg);border-bottom:2px solid var(--bd)}
+body.bm #tabs button:not([data-k="إدراج"]){display:none}
+body.bm #ql #tabs{border:0}body.bm #ql #tabs button{flex:none;height:40px;padding:0 12px;border-radius:10px;font-size:15px;font-weight:700}
+body.bm #scb,body.bm #bzl,body.bm #bzr,body.bm #fv{display:none!important}
+body.bm #rd{visibility:hidden;pointer-events:none}
+#qf,#ql{display:flex;align-items:center;gap:6px;flex:1 1 300px;min-width:0}
+#ql{border-inline-start:2px dashed var(--bd);padding-inline-start:8px;overflow-x:auto}
+#qf{flex-wrap:wrap}
+#qb button.qs{height:40px;min-width:42px;padding:0 8px;border-radius:12px;border:2px solid var(--bd);background:var(--bg);font-size:20px;display:flex;align-items:center;justify-content:center;gap:4px;flex:none}
+#qb button.qs.sel{border-color:#2563eb;background:#2563eb22}
+#qb button.qs.ed{outline:2px dashed #dc2626}
+#qb .dt{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 2px #94a3b8}
+#qtg{width:44px;height:44px;border-radius:50%;background:#dc2626;border:3px solid #fff;color:#fff;font-size:22px;font-weight:800;box-shadow:0 2px 6px #0006;flex:none;display:flex;align-items:center;justify-content:center;padding:0}
+#ql #pmb,#ql #pgp,#ql #fl,#ql #tbn{position:static!important;inset:auto!important;margin:0!important;transform:none!important;flex:none}
+#qch{display:flex;gap:6px;align-items:center;flex:1 1 100%;overflow-x:auto}#qch:empty{display:none}
+.chip{height:38px;border-radius:19px;padding:0 12px;background:#0ea5e9;color:#fff;border:2px solid #fff;box-shadow:0 1px 5px #0005;font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;flex:none;white-space:nowrap}
+.chip.blink{animation:bl .6s infinite alternate;background:#dc2626}@keyframes bl{to{opacity:.35}}
+.chip .cp{background:#fff;color:#0f172a;border-radius:12px;padding:0 8px}
+.w4.mini{display:none!important}`;
+document.head.append(st);
+const mw=$('mw'),tabs=$('tabs');
+const qb=document.createElement('div');qb.id='qb';
+qb.innerHTML='<div id="qf"></div><div id="ql"><button id="qtg" title="الأدوات">☰</button><button class="qs" id="qun">↶</button><button class="qs" id="qre">↷</button></div><div id="qch"></div>';
+mw.prepend(qb);
+const qf=$('qf'),ql=$('ql'),qch=$('qch');
+let edit=0;
+const KEEP=['undo','redo','sm','snap'];
+/* ---- المفضلة ---- */
+const DEF=()=>[{t:'tool',k:'pen'},{t:'tool',k:'hl'},{t:'tool',k:'er'},{t:'size'},{t:'col',c:'#111111'},{t:'col',c:'#dc2626'},{t:'col',c:'#2563eb'}];
+const QF=()=>S.qf&&S.qf.length?S.qf:(S.qf=DEF());
+const DRAW=['pen','naskh','ruqah','arab','hl','glow'];
+const curC=()=>B?(B.tool=='hl'?B.hc:B.col):'';
+let sig='';
+function renderQ(force){if(!B)return;const s=JSON.stringify([QF(),B.tool,B.col,B.hc,B.size,edit]);if(!force&&s==sig)return;sig=s;qf.innerHTML='';
+ QF().forEach((it,i)=>{const b=document.createElement('button');b.className='qs'+(edit?' ed':'');b.dataset.i=i;
+  if(it.t=='tool'){const t=TL.find(x=>x[1]==it.k);b.innerHTML=t?t[0]:'?';if(B.tool==it.k)b.classList.add('sel')}
+  else if(it.t=='size'){b.innerHTML='● '+B.size}
+  else{b.innerHTML='<span class="dt" style="background:'+it.c+'"></span>';if(curC()==it.c)b.classList.add('sel')}
+  let tm=0,lp=0;b.onpointerdown=()=>{lp=0;tm=setTimeout(()=>{lp=1;chooser(i)},520)};
+  const cl=()=>clearTimeout(tm);b.onpointerup=cl;b.onpointerleave=cl;b.onpointercancel=cl;
+  b.onclick=()=>{if(lp)return;if(edit){chooser(i);return}use(it)};qf.append(b)});
+ const ed=document.createElement('button');ed.className='qs'+(edit?' sel':'');ed.textContent=edit?'✔':'✎';ed.title='تعديل المفضلة';ed.onclick=()=>{edit=edit?0:1;renderQ(1)};qf.append(ed);
+ if(edit){const ad=document.createElement('button');ad.className='qs';ad.textContent='＋';ad.onclick=()=>{QF().push({t:'tool',k:'pen'});persist();renderQ(1);chooser(QF().length-1)};qf.append(ad)}}
+function use(it){if(!B)return;
+ if(it.t=='tool'){if(B.tool==it.k)tool(it.k);else tool(it.k,1)}
+ else if(it.t=='size')szPop();
+ else{if(!DRAW.includes(B.tool))tool('pen',1);B[B.tool=='hl'?'hc':'col']=it.c}
+ sig='';renderQ()}
+function chooser(i){const p=$('pp');
+ p.innerHTML='<div style="display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow:auto;min-width:230px"><b>اختر ما يوضع في هذه الخانة</b>'
+  +'<button data-q="__col" style="font-size:17px">🎨 لون…</button><button data-q="__size" style="font-size:17px">● الحجم</button>'
+  +TL.filter(t=>!['col','size'].includes(t[1])).map(t=>'<button data-q="'+t[1]+'" style="font-size:20px;text-align:right">'+t[0]+' <small style="font-size:12px">'+t[1]+'</small></button>').join('')
+  +'<button data-q="__del" style="font-size:17px;color:#dc2626">🗑 إزالة الخانة</button></div>';
+ p.onpointerdown=null;p.onclick=e=>{const k=e.target.closest('[data-q]');if(!k)return;const v=k.dataset.q;p.hidden=true;
+  if(v=='__del'){QF().splice(i,1)}else if(v=='__size'){QF()[i]={t:'size'}}
+  else if(v=='__col'){pal(c=>{QF()[i]={t:'col',c};persist();renderQ(1)});return}
+  else QF()[i]={t:'tool',k:v};persist();renderQ(1)};showPop()}
+/* ---- زر الأدوات الأحمر ---- */
+$('qtg').onclick=()=>{if(!B)return;if(bt.hidden)expand();else collapse();};
+$('qun').onclick=()=>tool('undo');$('qre').onclick=()=>tool('redo');
+/* إخفاء الشريط بعد اختيار أداة */
+const T16=tool;tool=function(k,q){const r=T16.apply(this,arguments);if(B&&!bt.hidden&&!KEEP.includes(k)&&!window.__noAuto)setTimeout(()=>{if(B&&!bt.hidden)collapse()},70);return r};
+const b16=board;board=function(on){const r=b16.apply(this,arguments);if(on&&B){setTimeout(()=>{if(B&&!bt.hidden)collapse();sig='';renderQ(1)},30)}return r};
+/* ---- تنظيم العناصر ---- */
+function layout(){const on=!!B;document.body.classList.toggle('bm',on);
+ if(on){if(tabs.parentNode!=ql)ql.insertBefore(tabs,$('qun'));[$('pmb'),$('pgp'),$('fl'),$('tbn')].forEach(e=>{if(e&&e.parentNode!=ql)ql.append(e)});renderQ()}
+ else if(tabs.parentNode!=mw)mw.insertBefore(tabs,$('rb'))}
+setInterval(layout,300);
+/* ---- تصغير الأدوات إلى حبّات ---- */
+window.__mini=d=>{d.classList.add('mini');const c=document.createElement('button');c.className='chip';
+ const ic=((d.querySelector('header span')||{}).textContent||'🧰').trim().split(' ')[0];
+ c.innerHTML='<span class="ci">'+ic+'</span><span class="ct"></span>'+(d.au?'<span class="cp">▶</span>':'');
+ const ct=c.querySelector('.ct'),cp=c.querySelector('.cp');
+ const upd=()=>{if(!d.isConnected){clearInterval(id);c.remove();return}
+  let t=[...d.querySelectorAll('.big')].map(x=>x.textContent.trim()).filter(Boolean).join(' : ');
+  if(d.au){t=((d.querySelector('section>div')||{}).textContent||'').slice(0,14);if(cp)cp.textContent=d.au.paused?'▶':'⏸'}
+  ct.textContent=t;const bg=d.querySelector('.big');c.classList.toggle('blink',!!(bg&&bg.style.color&&/⏱/.test(ic)))};
+ const id=setInterval(upd,400);upd();
+ c.onclick=e=>{if(d.au&&e.target.closest('.cp')){d.au.paused?d.au.play():d.au.pause();upd();return}d.classList.remove('mini');clearInterval(id);c.remove()};
+ qch.append(c)};
+window.__v16={renderQ,chooser,QF,layout};
 })();
 </script></body></html>
