@@ -126,6 +126,23 @@ jobs:
               }
             }
 
+            private long lastHide = 0;
+            @Override
+            public boolean dispatchGenericMotionEvent(android.view.MotionEvent ev) {
+              boolean r = super.dispatchGenericMotionEvent(ev);
+              long n = android.os.SystemClock.uptimeMillis();
+              if (n - lastHide > 60) { lastHide = n; hidePointer(); }
+              return r;
+            }
+
+            @Override
+            public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+              boolean r = super.dispatchTouchEvent(ev);
+              long n = android.os.SystemClock.uptimeMillis();
+              if (n - lastHide > 150) { lastHide = n; hidePointer(); }
+              return r;
+            }
+
             private void immersive() {
               try {
                 WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
