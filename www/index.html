@@ -2619,7 +2619,7 @@ const est=document.createElement('style');est.textContent=`
 .kst{display:flex;gap:6px;overflow-x:auto;padding:4px 4px 2px;direction:rtl;min-height:34px;align-items:center;touch-action:pan-x}.kc{flex:0 0 auto;background:#fff;border:0;border-radius:14px;padding:6px 12px;font:600 14px system-ui;color:#111;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kc.cl{background:#fde68a}
 #kbd{z-index:130!important}
 #dlg.kbp{align-items:flex-start!important}
-#kbd,#kbo{z-index:100!important}
+#kbd,#kbo{z-index:130!important}
 #lze{position:fixed;inset:0;z-index:60;background:var(--bg);color:var(--fg);display:none;flex-direction:column;direction:rtl;box-sizing:border-box}
 #lze button{font-family:inherit;touch-action:manipulation}
 .lzr1,.lzr2,.lzr3{display:flex;gap:4px;align-items:center;padding:3px 6px;flex:none;background:var(--sb);border-bottom:1px solid var(--bd);overflow-x:auto;scrollbar-width:none}
@@ -3217,8 +3217,8 @@ const end=e=>{if(!act||e.pointerId!=act.id)return;const t=act.t;act=null;t.class
 addEventListener('pointerup',end,true);addEventListener('pointercancel',end,true);
 /* ---- كل خانات الكتابة تستعمل لوحتنا ---- */
 const txt0=t=>t&&((t.tagName=='TEXTAREA')||(t.tagName=='INPUT'&&/^(text|search|url|email|tel|number|password|)$/i.test(t.type))||(t.id=='ed'&&(typeof B=='undefined'||!B)))&&!t.closest('#kbd,#tkb,#tcl');
-const txt=t=>txt0(t)&&S.ckAll!==false&&!window.__WEB;
-let back=null;addEventListener('focusin',e=>{const t=e.target;if(S.ckAll===false&&!window.__WEB&&txt0(t)){if(!back){back=document.createElement('button');back.textContent='⌨ لوحتنا';back.style.cssText='position:fixed;left:8px;top:8px;z-index:140;background:#92400e;color:#fff;border:0;border-radius:16px;padding:8px 14px;font:700 14px system-ui';back.onclick=()=>{S.ckAll=true;persist();back.remove();back=null;const a=document.activeElement;if(a)a.blur();setTimeout(()=>a&&a.focus(),60)};APPE().append(back)}}else if(back){back.remove();back=null}},true);
+const txt=t=>txt0(t)&&S.ckAll!==false;
+let back=null;addEventListener('focusin',e=>{const t=e.target;if(S.ckAll===false&&txt0(t)){if(!back){back=document.createElement('button');back.textContent='⌨ لوحتنا';back.style.cssText='position:fixed;left:8px;top:8px;z-index:140;background:#92400e;color:#fff;border:0;border-radius:16px;padding:8px 14px;font:700 14px system-ui';back.onclick=()=>{S.ckAll=true;persist();back.remove();back=null;const a=document.activeElement;if(a)a.blur();setTimeout(()=>a&&a.focus(),60)};APPE().append(back)}}else if(back){back.remove();back=null}},true);
 let bound=null;
 addEventListener('focusin',e=>{const t=e.target;if(!txt(t)||t.dataset.sysk)return;if(window.__ckLz){t.setAttribute('inputmode','none');bound=t;window.__ckLz.set(t);setTimeout(()=>keep(t),260);setTimeout(()=>keep(t),700)}},true);
 addEventListener('focusout',e=>{const t=e.target;if(t!==bound)return;setTimeout(()=>{const a=document.activeElement;if(bound===t&&!(txt(a))&&window.__ckLT===t&&!(t.id=='ed'&&t.offsetParent&&!(a&&a.closest&&a.closest('#kbd')))){bound=null;window.__ckLz.set(null);pad(null)}},180)},true);

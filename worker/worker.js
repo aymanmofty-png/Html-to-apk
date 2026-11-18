@@ -22,7 +22,7 @@ if(env.RL){const key=id+':'+new Date().toISOString().slice(0,10);const n=parseIn
 if(n>=limit)return J({error:'وصلت الحد اليومي، جرب غداً'},429);
 await env.RL.put(key,String(n+1),{expirationTtl:172800})}
 const list=[env.MODEL||'gemini-3.8-flash'].concat(String(env.FALLBACKS||'gemini-flash-latest,gemini-flash-lite-latest,gemini-2.5-flash-lite,gemini-2.0-flash').split(',').map(s=>s.trim()).filter(Boolean));
-const body=JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.7,responseMimeType:b.json?'application/json':'text/plain'}});
+const body=JSON.stringify({contents:[{role:'user',parts:[{text:prompt}].concat((Array.isArray(b.images)?b.images:[]).slice(0,8).filter(x=>x&&x.data).map(x=>({inline_data:{mime_type:x.mime||'image/jpeg',data:String(x.data)}})))}],generationConfig:{temperature:0.7,responseMimeType:b.json?'application/json':'text/plain'}});
 let err='',st=500;
 for(const m of list){
 let r;try{r=await fetch(API+'models/'+m+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':env.GEMINI_KEY},body:body})}catch(e){err=String(e);continue}
