@@ -357,7 +357,7 @@ function tool(k,q){if(k!='sel')selShape(null);if(['pen','naskh','ruqah','sel','a
  [...bt.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.k==B.tool||(b.dataset.k=='sm'&&B.sm)||(b.dataset.k=='snap'&&B.snap)))}
 function szPop(){const p=$('pp');p.innerHTML='<input type="range" min="1" max="30" value="'+Math.min(30,B.size)+'" style="flex:1;min-width:220px"><b>'+B.size+'</b>';p.onpointerdown=null;p.onclick=null;p.querySelector('input').oninput=e=>{B.size=+e.target.value;p.querySelector('b').textContent=B.size};showPop()}
 function pres(on){document.body.classList.toggle('pres',on);$('px').hidden=!on}$('px').onclick=()=>pres(0);
-function board(on){if(on){const n=cur();if(!n)return;B={tool:'pen',col:matchMedia('(prefers-color-scheme: dark)').matches?'#f4f4f5':'#111111',hc:'#fde047',size:4,off:S.wm=='o'?(Math.max(0,S.offv||0)):0,vl:S.vl!==false,vc:S.vc!==false,vp:S.vp!==false,sm:true,snap:false,bg:n.bg||0,s:[...(n.b||[])],h:[],r2:[]};bc.hidden=bt.hidden=gl.hidden=false;$('rd').hidden=true;$('tbn').hidden=true;$('tbn').classList.toggle('off',!T().on);showTW();orient(T().on);gl.width=innerWidth;gl.height=innerHeight;
+function board(on){if(on){const n=cur();if(!n)return;B={tool:'pen',col:matchMedia('(prefers-color-scheme: dark)').matches?'#f4f4f5':'#111111',hc:'#fde047',size:4,off:S.wm=='o'?(Math.max(0,S.offv||0)):0,vl:S.vl!==false,vc:S.vc!==false,vp:S.vp!==false,sm:true,snap:false,bg:n.bg||0,s:[...(n.b||[])],h:[],r2:[]};bc.hidden=bt.hidden=gl.hidden=false;$('rd').hidden=true;$('tbn').hidden=true;$('tbn').classList.toggle('off',!T().on);showTW();orient(T().on);gl.width=innerWidth;gl.height=innerHeight;if(!window.__WEB)setTimeout(()=>{try{if(B&&B.tool=='pen')tool('hand',1)}catch(e){}},0);
   mkBar();tool('pen',1);sync();$('bd').classList.add('on');sel(null);closeM();favs()}
  else{B=null;bc.hidden=bt.hidden=gl.hidden=true;$('rd').hidden=$('so').hidden=$('tbn').hidden=$('tw').hidden=$('cal').hidden=true;cal=0;orient(0);pres(0);document.querySelectorAll('.wd').forEach(x=>x.remove());$('pt').hidden=true;$('bd').classList.remove('on');favs()}}
 $('bd').onclick=()=>board(!B);
@@ -1565,7 +1565,7 @@ function placePop(){const p=$$('pp');if(!p||p.hidden)return;if(!B){['left','top'
  p.style.left=clamp(x,0,Math.max(0,innerWidth-w))+'px';p.style.top=clamp(y,0,Math.max(0,innerHeight-80))+'px'}
 const sp0=showPop;showPop=function(){sp0.apply(this,arguments);placePop()};
 const pp=$$('pp');
-pp.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.pdh');if(!h)return;e.preventDefault();h.setPointerCapture(e.pointerId);
+pp.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.pdh');if(!h)return;e.preventDefault();try{h.setPointerCapture(e.pointerId)}catch(_){}
  const ox=e.clientX-pp.offsetLeft,oy=e.clientY-pp.offsetTop;
  h.onpointermove=m=>{pp.style.left=clamp(m.clientX-ox,0,Math.max(0,innerWidth-pp.offsetWidth))+'px';pp.style.top=clamp(m.clientY-oy,0,Math.max(0,innerHeight-60))+'px'};
  h.onpointerup=h.onpointercancel=()=>{h.onpointermove=null;WP().pp={x:pp.offsetLeft,y:pp.offsetTop};persist()}});
@@ -1781,7 +1781,8 @@ function fitBar(el){const p=el&&el.__p;if(!p||p.t=='chips')return;const g=geoOf(
  setG(p,{x,y,w,h});persist();renderAll()}
 function startOne(el){if(E||!B)return;if(E1&&E1!==el)E1.classList.remove('pe');E1=el;el.classList.add('pe');L.append(el);renderAll()}
 function endOne(){if(!E1)return;E1.classList.remove('pe');E1=null;persist();renderAll()}
-function toggleEdit(){if(!B)return;if(E1){E1.classList.remove('pe');E1=null}E=E?0:1;L.classList.toggle('ed',!!E);if(E){ensureEditUI();if(!bt.hidden)collapse()}
+function editBar(on){let b=document.getElementById('edbar');if(!on){if(b)b.remove();return}if(b)return;b=document.createElement('div');b.id='edbar';b.style.cssText='position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;gap:8px;background:#1f2937;border-radius:22px;padding:6px 10px;box-shadow:0 4px 16px #0006;font:600 14px system-ui';b.innerHTML='<button id="edok" style="background:#22c55e;color:#fff;border:0;border-radius:16px;padding:8px 16px;font:inherit">✔ تم</button><button id="edrs" style="background:#475569;color:#fff;border:0;border-radius:16px;padding:8px 12px;font:inherit">↺ إعادة</button>';APPE().append(b);b.querySelector('#edok').onclick=()=>toggleEdit();b.querySelector('#edrs').onclick=()=>{const r=document.querySelector('.fpb [data-b="rst"]');if(r)r.click()}}
+function toggleEdit(){if(!B)return;if(E1){E1.classList.remove('pe');E1=null}E=E?0:1;L.classList.toggle('ed',!!E);editBar(!!E);if(E){ensureEditUI();if(!bt.hidden)collapse()}
  els.forEach(e=>{e.__sig=null});if(poolEl)poolEl.__sig=null;renderAll();if(!E)persist()}
 const GV=p=>geoOf(p);
 function setG(p,g){(p.g=p.g||{})[GK()]=g;renderPanel(p)}
@@ -1975,7 +1976,8 @@ const kbd=document.createElement('div');kbd.id='kbd';APPE().append(kbd);
 const kbo=document.createElement('button');kbo.id='kbo';kbo.textContent='⌨';APPE().append(kbo);
 const ckb2=document.createElement('button');ckb2.id='ckb2';ckb2.textContent='⌨ رجوع للكيبورد الخاص';document.body.append(ckb2);
 let KM=[],KH=0;
-const ed0=$$('ed'),ew0=$$('ew');ed0.setAttribute('virtualkeyboardpolicy','manual');let LZT=null;window.__ckLz={set(el){LZT=el;window.__ckLT=el;if(el){CK.hid=0;CK.sys=0;window.__ckb=1;el.setAttribute('inputmode','none')}else{if(!(B&&B.tool=='kb'))window.__ckb=0}setTimeout(sync,0);setTimeout(sync,100)},get KH(){return KH+(LZT&&KH?40:0)}};
+const ed0=$$('ed'),ew0=$$('ew');ed0.setAttribute('virtualkeyboardpolicy','manual');let LZT=null;let LZR=null;document.addEventListener('selectionchange',()=>{if(LZT&&LZT.isContentEditable){const g=getSelection();if(g.rangeCount&&LZT.contains(g.anchorNode))LZR=g.getRangeAt(0).cloneRange()}});
+window.__ckLz={set(el){LZT=el;window.__ckLT=el;LZR=null;if(el){CK.hid=0;CK.sys=0;window.__ckb=1;el.setAttribute('inputmode','none')}else{if(!(B&&B.tool=='kb'))window.__ckb=0}setTimeout(sync,0);setTimeout(sync,100)},get KH(){return KH+(LZT&&KH?40:0)}};
 const khOf=()=>clamp(Math.round(innerHeight*.064*SC().sc),38,76);
 function build(){
  const lang=CK.lang,P=CK.pg,ar=lang=='ar',sh=CK.sh;KM=[];
@@ -2018,7 +2020,7 @@ function build(){
  const kh=khOf();kbd.style.setProperty('--kh',kh+'px');KH=kbd.offsetHeight||(kh*4+60)}
 const vib=()=>{try{navigator.vibrate&&navigator.vibrate(7)}catch(e){}};
 /* ---- إدخال النص ---- */
-function ensure(){if(LZT){if(document.activeElement!==LZT)LZT.focus({preventScroll:true});const g0=getSelection();if(LZT.isContentEditable&&(!g0.rangeCount||!LZT.contains(g0.anchorNode))){const r0=document.createRange();r0.selectNodeContents(LZT);r0.collapse(false);g0.removeAllRanges();g0.addRange(r0)}return true}if(!B||B.tool!='kb')return false;const g=getSelection();if(document.activeElement!==ed0)ed0.focus({preventScroll:true});
+function ensure(){if(LZT){const was=document.activeElement===LZT,keep=LZR;if(!was)LZT.focus({preventScroll:true});const g0=getSelection();if(LZT.isContentEditable&&(!was||!g0.rangeCount||!LZT.contains(g0.anchorNode))){if(keep&&LZT.contains(keep.startContainer)){g0.removeAllRanges();g0.addRange(keep)}else{const r0=document.createRange();r0.selectNodeContents(LZT);r0.collapse(false);g0.removeAllRanges();g0.addRange(r0)}}return true}if(!B||B.tool!='kb')return false;const g=getSelection();if(document.activeElement!==ed0)ed0.focus({preventScroll:true});
  if(!g.rangeCount||!ed0.contains(g.anchorNode)){if(rng&&ed0.contains(rng.startContainer)){g.removeAllRanges();g.addRange(rng)}else{const r=document.createRange();r.selectNodeContents(ed0);r.collapse(false);g.removeAllRanges();g.addRange(r)}}return true}
 function caretVis(){if(LZT)return;try{const g=getSelection();if(!g.rangeCount)return;const r=g.getRangeAt(0).cloneRange();r.collapse(false);let rc=r.getBoundingClientRect();
  if(!rc||(!rc.height&&!rc.width)){const n=r.startContainer.nodeType==1?r.startContainer:r.startContainer.parentElement;if(n)rc=n.getBoundingClientRect()}
@@ -2078,7 +2080,7 @@ kbd.addEventListener('click',e=>{const b=e.target.closest('.kt button');if(!b)re
  else if(t=='sys')toSys()});
 kbo.addEventListener('click',()=>{CK.hid=0;sync()});
 /* ---- التبديل إلى كيبورد النظام: يقلب الشاشة مرة واحدة ---- */
-function toSys(){if(LZT)return;CK.sys=1;window.__ckb=0;ed0.removeAttribute('inputmode');window.kbIntent=performance.now();try{ed0.blur()}catch(e){}
+function toSys(){if(LZT){const el=LZT;S.ckAll=false;persist();window.__ckLz.set(null);el.removeAttribute('inputmode');try{el.blur()}catch(e){}setTimeout(()=>{try{el.focus()}catch(e){}},120);return}CK.sys=1;window.__ckb=0;ed0.removeAttribute('inputmode');window.kbIntent=performance.now();try{ed0.blur()}catch(e){}
  setTimeout(()=>{if(!(B&&B.tool=='kb'&&CK.sys))return;ed0.focus();const g=getSelection();if(rng&&ed0.contains(rng.startContainer)){g.removeAllRanges();g.addRange(rng)}},80);sync()}
 function toCustom(){CK.sys=0;window.__ckb=1;ed0.setAttribute('inputmode','none');try{ed0.blur()}catch(e){}
  const kb=$$('kbh');if(kb)kb.click();
@@ -2458,6 +2460,7 @@ const st=document.createElement('style');st.textContent=`
 #lzb .nm{font:700 12px sans-serif;min-width:48px;text-align:center;color:#e2e8f0}#lzb .gp{background:transparent;font-size:18px;min-width:24px;padding:0 2px}
 `;document.head.append(st);
 function placeBar(bar){const W=innerWidth,H=innerHeight,p=S.lzpb;const w=bar.offsetWidth||260,h=bar.offsetHeight||44;let x,y;if(p){x=p.x;y=p.y}else{x=(W-w)/2;y=H-h-14}bar.style.left=clamp(x,2,Math.max(2,W-w-2))+'px';bar.style.top=clamp(y,2,Math.max(2,H-h-2))+'px'}
+function lzpPE(){if(!PL||!PL.layer)return;PL.layer.style.pointerEvents=(!PL.test&&!PL.layer.classList.contains('pick')&&typeof B!='undefined'&&B&&B.tool=='hand')?'auto':''}
 function topReserve(){const H=innerHeight;let m=0;['.bar','#fps'].forEach(q=>{const e=document.querySelector(q);if(e&&e.getClientRects().length){const r=e.getBoundingClientRect();if(r.top<H*.4&&r.bottom>m)m=r.bottom}});
  if(m>0&&typeof B!='undefined'&&B){S.lzRf=m/H;return m}return Math.round((S.lzRf||.19)*H)}
 function frameOf(l){const W=innerWidth,H=innerHeight;if(l.fr)return{x:l.fr.x*W,y:l.fr.y*H,w:l.fr.w*W,h:l.fr.h*H,m:l.fr.m||'fit'};const R=topReserve();return{x:0,y:R,w:W,h:H-R,m:'fit'}}
@@ -2486,13 +2489,14 @@ function inkSwap(from,to){if(!PL||!PL.ink||!PL.base||typeof B=='undefined'||!B)r
 function goSlide(i,end){if(!PL)return;i=clamp(i,0,PL.l.sl.length-1);const from=PL.idx;if(i!=from)inkSwap(from,i);PL.idx=i;const sl=PL.l.sl[i];PL.step=0;layoutPlay();if(end){PL.step=PL.stg.gs.length;PL.stg.state(PL.step)}barLabel();if(i!=from)trans(PL.box,PL.l.tr)}
 function plNext(){if(!PL)return;if(PL.stg.skip()){return}const g=PL.stg.gs.length;if(PL.step<g){PL.stg.play(PL.step,PL.l.sn==null?0:PL.l.sn);PL.step++}else if(PL.idx<PL.l.sl.length-1){goSlide(PL.idx+1)}else if(typeof hint=='function')hint('🎓 نهاية الدرس');barLabel()}
 function plPrev(){if(!PL)return;PL.stg.skip();if(PL.step>0){PL.step--;PL.stg.state(PL.step)}else if(PL.idx>0)goSlide(PL.idx-1,1);barLabel()}
-function stopPlay(keepInk){if(!PL)return;feEnd(1);const sj=document.getElementById('lzsj');if(sj)sj.remove();spotOff();SPM=0;const nn=document.getElementById('lzn');if(nn)nn.remove();if(PL.layer)PL.layer.remove();if(PL.bar)PL.bar.remove();PL=null}
+function stopPlay(keepInk){if(!PL)return;{const pt=PL.pt;if(pt&&!PL.test&&typeof B!='undefined'&&B&&B.tool=='hand'&&pt!='hand'&&pt!='lesson'){setTimeout(()=>{try{if(B&&B.tool=='hand'&&!PL)tool(pt,1)}catch(e){}},0)}}feEnd(1);const sj=document.getElementById('lzsj');if(sj)sj.remove();spotOff();SPM=0;const nn=document.getElementById('lzn');if(nn)nn.remove();if(PL.layer)PL.layer.remove();if(PL.bar)PL.bar.remove();PL=null}
 function startPlay(l,idx,o){o=o||{};stopPlay();if(!l||!l.sl.length)return;const test=o.mode=='test'||typeof B=='undefined'||!B;
  const layer=document.createElement('div');layer.id='lzp';if(test)layer.className='test';const box=document.createElement('div');box.className='lzst';layer.append(box);
  const bar=document.createElement('div');bar.id='lzb';if(test)bar.classList.add('t');
  bar.innerHTML='<button class="gp" title="تحريك">⠿</button><button class="sb" title="الشريحة السابقة">⏮</button><button class="pv" title="خطوة للخلف">◀</button><span class="nm" title="اضغط للقفز إلى شريحة"></span><button class="nx" title="الخطوة التالية">▶</button><button class="sf" title="الشريحة التالية">⏭</button><button class="xx" title="إنهاء">✖</button>'+(test?'':'<span class="br"></span><button class="ed" title="تعديل عنصر">✎</button><button class="ink" title="مسح الكتابة عند تغيير الشريحة">🧹</button><button class="sp" title="إضاءة مركّزة / ليزر">💡</button><button class="nt" title="ملاحظات الشريحة">📝</button><button class="fe" title="ضبط حجم ومكان العرض">⬚</button>');
  APPE().append(layer,bar);
  PL={l,idx:clamp(idx||0,0,l.sl.length-1),step:o.step||0,test,layer,box,bar,ink:true,inkMap:{},base:(!test&&typeof B!='undefined'&&B)?new Set(B.s):null,ret:o.ret};
+ if(!test){PL.pt=B.tool;if(B.tool!='hand'){try{tool('hand',1)}catch(e){}}}lzpPE();
  layoutPlay();placeBar(bar);barLabel();
  bar.addEventListener('click',e=>{const b=e.target.closest('button,.nm');if(!b)return;e.stopPropagation();
   if(b.classList.contains('nx'))plNext();else if(b.classList.contains('pv'))plPrev();else if(b.classList.contains('sf')){if(PL.idx<PL.l.sl.length-1)goSlide(PL.idx+1);else hint('🎓 هذه آخر شريحة')}else if(b.classList.contains('sb')){if(PL.idx>0)goSlide(PL.idx-1);else hint('هذه أول شريحة')}else if(b.classList.contains('nm'))slideJump();else if(b.classList.contains('fe'))feToggle();
@@ -2502,7 +2506,7 @@ function startPlay(l,idx,o){o=o||{};stopPlay();if(!l||!l.sl.length)return;const 
  let mv=null;bar.addEventListener('pointerdown',e=>{if(!e.target.closest('.gp'))return;e.preventDefault();bar.setPointerCapture(e.pointerId);mv={x:e.clientX-bar.offsetLeft,y:e.clientY-bar.offsetTop}});
  bar.addEventListener('pointermove',e=>{if(!mv)return;bar.style.left=clamp(e.clientX-mv.x,2,innerWidth-bar.offsetWidth-2)+'px';bar.style.top=clamp(e.clientY-mv.y,2,innerHeight-bar.offsetHeight-2)+'px'});
  const up=()=>{if(mv){mv=null;S.lzpb={x:bar.offsetLeft,y:bar.offsetTop};persist()}};bar.addEventListener('pointerup',up);bar.addEventListener('pointercancel',up);
- layer.addEventListener('click',e=>{if(layer.classList.contains('pick')||!PL||!PL.stg)return;const n=e.target.closest&&e.target.closest('.le');if(!n||n.classList.contains('hid'))return;const t=PL.stg.fire(n.dataset.id);if(!t)return;e.stopImmediatePropagation();e.stopPropagation();
+ layer.addEventListener('click',e=>{if(layer.classList.contains('pick')||!PL||!PL.stg)return;const n=e.target.closest&&e.target.closest('.le');const t=(n&&!n.classList.contains('hid'))?PL.stg.fire(n.dataset.id):null;if(!t){if(!PL.test&&!PL.fe&&typeof B!='undefined'&&B&&B.tool=='hand'&&!(PL.stg&&PL.stg.busy&&0)){e.stopPropagation();plNext()}return}e.stopImmediatePropagation();e.stopPropagation();
   if(t.go=='next')setTimeout(()=>{if(PL)goSlide(Math.min(PL.idx+1,PL.l.sl.length-1))},900);else if(t.go=='prev')setTimeout(()=>{if(PL)goSlide(Math.max(PL.idx-1,0))},300)});
  if(test)layer.addEventListener('click',e=>{if(!e.target.closest('#lzb'))plNext()});
  return PL}
@@ -2594,6 +2598,8 @@ function undo(){if(!ED.un.length)return;ED.rd.push(snapJ());restore(ED.un.pop())
 function redo(){if(!ED.rd.length)return;ED.un.push(snapJ());restore(ED.rd.pop());lastSnap=0}
 const est=document.createElement('style');est.textContent=`
 #dlg{z-index:120!important}
+#kbd{z-index:130!important}
+#dlg.kbp{align-items:flex-start!important}
 #kbd,#kbo{z-index:100!important}
 #lze{position:fixed;inset:0;z-index:60;background:var(--bg);color:var(--fg);display:none;flex-direction:column;direction:rtl;box-sizing:border-box}
 #lze button{font-family:inherit;touch-action:manipulation}
@@ -2976,7 +2982,7 @@ function openList(ctx){closeList();const board=ctx=='board'&&typeof B!='undefine
 /* ---------- الربط مع التطبيق ---------- */
 try{const hb=document.querySelector('#home .bar'),nn=$$('nn');if(hb&&nn&&!$$('lzh')){const b=document.createElement('button');b.id='lzh';b.title='إعداد الدروس';b.textContent='🎓';hb.insertBefore(b,nn);b.onclick=()=>openList('home')}}catch(e){}
 TL.push(['🎓','lesson']);
-const t22=tool;tool=function(k,q){if(k=='lesson'){openList('board');return}return t22.apply(this,arguments)};
+const t22=tool;tool=function(k,q){if(k=='lesson'){openList('board');return}const r=t22.apply(this,arguments);if(PL&&!PL.test)lzpPE();return r};
 try{const V=window.__v19;if(V){const fp=V.FP();if(!fp.lzAdded){fp.lzAdded=1;const a=fp.p.find(p=>p.id=='act');if(a&&!a.items.includes('tool:lesson')){const i=a.items.indexOf('cust');a.items.splice(i<0?a.items.length:i,0,'tool:lesson')}persist();V.renderAll()}}}catch(e){}
 window.addEventListener('resize',()=>{if(PL)setTimeout(()=>{layoutPlay();placeBar(PL.bar)},80)});
 
@@ -3159,13 +3165,15 @@ addEventListener('pointermove',e=>{if(!act||e.pointerId!=act.id)return;e.prevent
 const end=e=>{if(!act||e.pointerId!=act.id)return;const t=act.t;act=null;t.classList.remove('lzdrag');t.dispatchEvent(new Event('change',{bubbles:true}))};
 addEventListener('pointerup',end,true);addEventListener('pointercancel',end,true);
 /* ---- كل خانات الكتابة تستعمل لوحتنا ---- */
-const txt=t=>t&&((t.tagName=='TEXTAREA')||(t.tagName=='INPUT'&&/^(text|search|url|email|tel|number|password|)$/i.test(t.type)))&&t.id!='ed'&&!t.closest('#kbd,#tkb,#tcl');
+const txt0=t=>t&&((t.tagName=='TEXTAREA')||(t.tagName=='INPUT'&&/^(text|search|url|email|tel|number|password|)$/i.test(t.type))||(t.id=='ed'&&(typeof B=='undefined'||!B)))&&!t.closest('#kbd,#tkb,#tcl');
+const txt=t=>txt0(t)&&S.ckAll!==false&&!window.__WEB;
+let back=null;addEventListener('focusin',e=>{const t=e.target;if(S.ckAll===false&&!window.__WEB&&txt0(t)){if(!back){back=document.createElement('button');back.textContent='⌨ لوحتنا';back.style.cssText='position:fixed;left:8px;top:8px;z-index:140;background:#92400e;color:#fff;border:0;border-radius:16px;padding:8px 14px;font:700 14px system-ui';back.onclick=()=>{S.ckAll=true;persist();back.remove();back=null;const a=document.activeElement;if(a)a.blur();setTimeout(()=>a&&a.focus(),60)};APPE().append(back)}}else if(back){back.remove();back=null}},true);
 let bound=null;
 addEventListener('focusin',e=>{const t=e.target;if(!txt(t)||t.dataset.sysk)return;if(window.__ckLz){t.setAttribute('inputmode','none');bound=t;window.__ckLz.set(t);setTimeout(()=>keep(t),260);setTimeout(()=>keep(t),700)}},true);
-addEventListener('focusout',e=>{const t=e.target;if(t!==bound)return;setTimeout(()=>{const a=document.activeElement;if(bound===t&&!(txt(a))&&window.__ckLT===t){bound=null;window.__ckLz.set(null);pad(null)}},180)},true);
+addEventListener('focusout',e=>{const t=e.target;if(t!==bound)return;setTimeout(()=>{const a=document.activeElement;if(bound===t&&!(txt(a))&&window.__ckLT===t&&!(t.id=='ed'&&t.offsetParent&&!(a&&a.closest&&a.closest('#kbd')))){bound=null;window.__ckLz.set(null);pad(null)}},180)},true);
 /* إبقاء الخانة ظاهرة فوق الكيبورد داخل النوافذ المنبثقة */
-function pad(t){document.querySelectorAll('#qm,#lzai').forEach(m=>{m.style.paddingBottom='';const c=m.firstElementChild;if(c)c.style.maxHeight=''});}
-function keep(t){if(!t||window.__ckLT!==t)return;const kb=document.getElementById('kbd');if(!kb||kb.style.display!='block')return;const KH=kb.offsetHeight+40,m=t.closest('#qm,#lzai');
+function pad(t){document.querySelectorAll('#qm,#lzai,#dlg').forEach(m=>{m.style.paddingBottom='';const c=m.firstElementChild;if(c)c.style.maxHeight=''});}
+function keep(t){if(!t||window.__ckLT!==t)return;const kb=document.getElementById('kbd');if(!kb||kb.style.display!='block')return;const KH=kb.offsetHeight+40,m=t.closest('#qm,#lzai,#dlg');
  if(m){m.style.paddingBottom=KH+'px';m.style.alignItems='flex-start';const c=m.firstElementChild;if(c)c.style.maxHeight=(innerHeight-KH-12)+'px'}
  try{t.scrollIntoView({block:'center'})}catch(_){}}
 })();
@@ -3174,8 +3182,9 @@ function keep(t){if(!t||window.__ckLT!==t)return;const kb=document.getElementByI
 (function(){
 let own=0;
 async function upStart(){if(typeof ROT!='undefined'&&ROT&&!SUSP){SUSP=1;own=1;lockP(1);try{updateRot()}catch(e){}await new Promise(r=>setTimeout(r,480))}}
-function upEnd(){if(own){own=0;setTimeout(()=>{SUSP=0;lockP(0);setTimeout(updateRot,60);setTimeout(updateRot,600)},300)}}
-window.__upright=async fn=>{await upStart();try{return await fn()}finally{upEnd()}};
+function upEnd(){if(own){own=0;setTimeout(()=>{SUSP=0;lockP(0);setTimeout(updateRot,60);setTimeout(updateRot,600);setTimeout(updateRot,1500)},500)}}
+const holdSheet=()=>new Promise(r=>{let d=0;const fin=()=>{if(d)return;d=1;removeEventListener('focus',onf);document.removeEventListener('visibilitychange',onf);setTimeout(r,900)};const onf=()=>{if(document.hasFocus()&&!document.hidden)fin()};setTimeout(()=>{if(document.hasFocus()&&!document.hidden)fin();else{addEventListener('focus',onf);document.addEventListener('visibilitychange',onf)}},1500);setTimeout(fin,90000)});
+window.__upright=async(fn,o)=>{await upStart();try{return await fn()}finally{if(o&&o.hold)await holdSheet();upEnd()}};
 const oc=HTMLInputElement.prototype.click;
 HTMLInputElement.prototype.click=function(){if(this.type!='file'||this.__up)return oc.call(this);const s=this;upStart().then(()=>{s.__up=1;oc.call(s);s.__up=0;let d=0;const done=()=>{if(d)return;d=1;upEnd()};s.addEventListener('change',done,{once:true});s.addEventListener('cancel',done,{once:true});addEventListener('focus',()=>setTimeout(done,900),{once:true})})};
 const LIB=()=>new Promise((res,rej)=>{if(window.pdfjsLib)return res(window.pdfjsLib);const s=document.createElement('script');s.src='lib/pdf.min.js';s.onload=()=>{try{pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js'}catch(e){}res(window.pdfjsLib)};s.onerror=()=>rej(new Error('مكتبة PDF غير موجودة'));document.head.append(s)});
@@ -3186,6 +3195,102 @@ async function pick(kind,st){const set=t=>{if(st)st.textContent=t};try{
  if(kind=='pdf'){const f=(await files('application/pdf',0))[0];if(!f)return null;set('⏳ أقرأ الملف…');const r=await pdfPages(f);set('✔ '+f.name+' ('+r.n+' صفحة)');return{name:f.name,pages:r.pages,n:r.n}}
  const fs=(await files('image/*',1)).slice(0,6);if(!fs.length)return null;set('⏳ أجهّز الصور…');const imgs=[];for(const f of fs)imgs.push(await imgData(f));set('✔ '+imgs.length+' صورة');return{images:imgs}}catch(e){set('⚠ '+(e.message||e));return null}}
 window.__v24={pick,pdfPages};
+})();
+
+
+/* ================= v25a: التصدير (مشاركة/حفظ) + صيغ + تسجيل + كاميرا + ستارة ================= */
+(function(){
+const APPX=()=>document.getElementById('app')||document.body;
+function choose(title,groups,okTxt){return new Promise(res=>{const m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:200;background:#0008;display:flex;align-items:center;justify-content:center;direction:rtl';
+ const c=document.createElement('div');c.style.cssText='background:var(--bg,#fff);color:var(--tx,#111);border-radius:16px;padding:16px;min-width:260px;max-width:92%;max-height:90%;overflow:auto;font:15px system-ui;box-shadow:0 8px 30px #0008';
+ const val={};let h='<b style="font-size:17px;display:block;margin-bottom:10px">'+title+'</b>';
+ groups.forEach((g,gi)=>{val[g.k]=g.def!=null?g.def:g.o[0][0];h+=(g.l?'<div style="margin:8px 0 4px;opacity:.7;font-size:13px">'+g.l+'</div>':'')+'<div data-g="'+g.k+'" style="display:flex;flex-wrap:wrap;gap:6px">'+g.o.map(o=>'<button data-v="'+o[0]+'" style="flex:1 1 auto;padding:10px 12px;border-radius:12px;border:2px solid '+(o[0]==val[g.k]?'#f59e0b':'#9994')+';background:'+(o[0]==val[g.k]?'#f59e0b33':'transparent')+';color:inherit;font:inherit">'+o[1]+'</button>').join('')+'</div>'});
+ h+='<div style="display:flex;gap:8px;margin-top:14px"><button id="c25ok" style="flex:2;padding:12px;border:0;border-radius:12px;background:#f59e0b;color:#000;font:700 15px system-ui">'+(okTxt||'متابعة')+'</button><button id="c25no" style="flex:1;padding:12px;border:0;border-radius:12px;background:#9993;color:inherit;font:inherit">إلغاء</button></div>';
+ c.innerHTML=h;m.append(c);APPX().append(m);
+ c.addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b)return;const w=b.parentNode,k=w.dataset.g;val[k]=b.dataset.v;w.querySelectorAll('button').forEach(x=>{const on=x===b;x.style.borderColor=on?'#f59e0b':'#9994';x.style.background=on?'#f59e0b33':'transparent'});
+  if(groups.length==1&&groups[0].now){m.remove();res(val)}});
+ c.querySelector('#c25ok').onclick=()=>{m.remove();res(val)};c.querySelector('#c25no').onclick=()=>{m.remove();res(null)}})}
+window.__choose=choose;
+const b64=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(b)});
+const MIME={png:'image/png',jpg:'image/jpeg',webp:'image/webp',pdf:'application/pdf',mp4:'video/mp4',webm:'video/webm',m4a:'audio/mp4',json:'application/json'};
+const mimeOf=(n,b)=>(b&&b.type)||MIME[(n.split('.').pop()||'').toLowerCase()]||'application/octet-stream';
+function webDl(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{a.remove()},500)}
+async function saveDirect(name,blob){const C=window.Capacitor;try{const P=C&&(C.registerPlugin?C.registerPlugin('SaveDl'):(C.Plugins&&C.Plugins.SaveDl));if(P&&C.isNativePlatform&&C.isNativePlatform()){const r=await P.save({name,mime:mimeOf(name,blob),data:await b64(blob)});return '💾 حُفظ في: '+r.path}}catch(e){if(C&&C.isNativePlatform&&C.isNativePlatform()){try{const Fs=C.Plugins.Filesystem;await Fs.mkdir({path:'سبورتي',directory:'DOCUMENTS',recursive:true}).catch(()=>{});await Fs.writeFile({path:'سبورتي/'+name,data:await b64(blob),directory:'DOCUMENTS'});return '💾 حُفظ في: Documents/سبورتي/'+name}catch(e2){throw e}}}
+ webDl(name,blob);return '💾 تم التنزيل'}
+async function shareFile(name,blob){const C=window.Capacitor,Pl=C&&C.Plugins;if(Pl&&Pl.Filesystem&&Pl.Share){const r=await Pl.Filesystem.writeFile({path:name,data:await b64(blob),directory:'CACHE'});const f=()=>Pl.Share.share({title:name,files:[r.uri]});await (window.__upright?window.__upright(f,{hold:1}):f())}else webDl(name,blob)}
+out=async function(name,blob){try{const v=await choose('📦 '+name,[{k:'a',o:[['sv','💾 حفظ في سبورتي'],['sh','📤 مشاركة']],def:'sv'}],'تنفيذ');if(!v)return;
+ if(v.a=='sv'){const m=await saveDirect(name,blob);hint(m)}else await shareFile(name,blob)}catch(e){alert('تعذر الحفظ: '+(e.message||e))}};
+/* صورة: PNG / JPG / WebP */
+exPng=async function(){try{const v=await choose('🖼 صيغة الصورة',[{k:'f',o:[['png','PNG (أعلى جودة)'],['jpg','JPG (أخف)'],['webp','WebP (الأصغر)']],def:'png'}]);if(!v)return;const{cv}=await shot();
+ let c=cv;if(v.f=='jpg'){c=document.createElement('canvas');c.width=cv.width;c.height=cv.height;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(cv,0,0)}
+ c.toBlob(b=>out(nm()+'.'+v.f,b),MIME[v.f],.92)}catch(e){alert('تعذر إنشاء الصورة')}};
+/* تسجيل */
+const sup=m=>{try{return MediaRecorder.isTypeSupported(m)}catch(e){return false}};
+function pickMime(f){const L={mp4:['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a.40.2','video/mp4'],webm:['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'],m4a:['audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/aac'],aw:['audio/webm;codecs=opus','audio/webm']};
+ for(const k of (f=='m4a'?['m4a','aw']:[f,f=='mp4'?'webm':'mp4'])){for(const m of L[k])if(sup(m))return{m,ext:k=='aw'?'webm':k}}return{m:'',ext:'webm'}}
+let rcTm=0;
+function rcUI(on){const b=document.getElementById('rc');if(!b)return;clearInterval(rcTm);if(!on){b.hidden=true;return}const t0=Date.now();b.style.cssText+=';height:44px;font:700 15px system-ui;border:0;z-index:150;box-shadow:0 3px 12px #0007';b.hidden=false;const up=()=>{const s=Math.floor((Date.now()-t0)/1000);b.textContent='⏹ إيقاف التسجيل  '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};up();rcTm=setInterval(up,500)}
+record=async function(){if(rec){rec.r.stop();return}
+ const o=await choose('🎬 التسجيل',[{k:'f',l:'الصيغة',o:[['mp4','🎞 فيديو MP4'],['webm','🎞 فيديو WebM'],['m4a','🎧 صوت فقط M4A']],def:'mp4'},{k:'q',l:'الجودة',o:[['h','عالية'],['m','متوسطة'],['l','خفيفة']],def:'m'}],'ابدأ التسجيل');if(!o)return;
+ try{const ms=await navigator.mediaDevices.getUserMedia({audio:true}),pm=pickMime(o.f),audioOnly=o.f=='m4a';let vs,tk=0,ch3=[];
+  const br={h:[5e6,192e3],m:[2.2e6,128e3],l:[9e5,64e3]}[o.q];
+  if(audioOnly){vs=ms}else{const b0=await shot(1),ew=$('ew'),W=ew.clientWidth,Hh=ew.clientHeight,cv=document.createElement('canvas');cv.width=W;cv.height=Hh;const x=cv.getContext('2d');vs=cv.captureStream(o.q=='l'?12:20);ms.getAudioTracks().forEach(t=>vs.addTrack(t));
+   tk=setInterval(()=>{const st=ew.scrollTop;x.fillStyle='#fff';x.fillRect(0,0,W,Hh);x.drawImage(b0.cv,0,(b0.T+st)*b0.s,W*b0.s,Hh*b0.s,0,0,W,Hh);if(!bc.hidden)x.drawImage(bc,0,0,bc.width,bc.height,0,0,W,Hh)},50)}
+  const opt={audioBitsPerSecond:br[1]};if(pm.m)opt.mimeType=pm.m;if(!audioOnly)opt.videoBitsPerSecond=br[0];let r;try{r=new MediaRecorder(vs,opt)}catch(e){r=new MediaRecorder(vs)}
+  r.ondataavailable=e=>{if(e.data&&e.data.size)ch3.push(e.data)};r.onstop=()=>{clearInterval(tk);ms.getTracks().forEach(t=>t.stop());rcUI(0);rec=null;const ty=(pm.m||'').split(';')[0]||(audioOnly?'audio/webm':'video/webm');out('lesson.'+pm.ext,new Blob(ch3,{type:ty}))};
+  r.start(1000);rec={r};rcUI(1);if(pm.ext!=o.f&&!(audioOnly&&pm.ext=='webm'))hint('ℹ جهازك لا يدعم '+o.f.toUpperCase()+' — سيُسجَّل '+pm.ext.toUpperCase());else if(audioOnly&&pm.ext!='m4a')hint('ℹ سيُحفظ الصوت بصيغة WebM')}catch(e){alert('تعذر بدء التسجيل: '+(e.message||e))}};
+document.getElementById('rc').onclick=()=>{if(rec)rec.r.stop()};
+/* كاميرا: زر إغلاق */
+{const t0=tile;tile=function(P){t0(P);const d=P.tl;if(!d||d.querySelector('.vx'))return;const s=d.querySelector('s');if(s){const x=document.createElement('i');x.className='vx';x.textContent='✖';s.append(x);x.onclick=e=>{e.stopPropagation();if(P.self){if(lm){lm.getTracks().forEach(t=>t.stop());lm=null}d.remove()}else{d.hidden=true}}}}}
+/* ستارة: 4 حواف + 4 زوايا + نقل + إغلاق */
+curtain=function(){const W=()=>innerWidth,H=()=>innerHeight;const d=document.createElement('div');d.className='cu';let L=0,R=W(),T=56,B=Math.round(56+(H()-56)*.45);
+ d.style.cssText='position:fixed;z-index:7;background:#334155;touch-action:none;left:0;right:0;top:56px';
+ const mk=(c,css,txt)=>{const e=document.createElement('b');e.dataset.h=c;e.textContent=txt||'';e.style.cssText='position:absolute;background:#f59e0b;color:#000;text-align:center;touch-action:none;display:flex;align-items:center;justify-content:center;font-size:16px;margin:0;'+css;d.append(e);return e};
+ const hs=[['t','top:6px;left:50%;margin-left:-32px;width:64px;height:22px;border-radius:11px'],['b','bottom:6px;left:50%;margin-left:-32px;width:64px;height:22px;border-radius:11px'],['l','left:6px;top:50%;margin-top:-32px;width:22px;height:64px;border-radius:11px'],['r','right:6px;top:50%;margin-top:-32px;width:22px;height:64px;border-radius:11px'],['tl','top:6px;left:6px;width:30px;height:30px;border-radius:50%'],['tr','top:6px;right:6px;width:30px;height:30px;border-radius:50%'],['bl','bottom:6px;left:6px;width:30px;height:30px;border-radius:50%'],['br','bottom:6px;right:6px;width:30px;height:30px;border-radius:50%']];
+ hs.forEach(h=>mk(h[0],h[1]));const mv=mk('m','left:50%;top:50%;margin:-22px 0 0 -48px;width:50px;height:44px;border-radius:14px','⠿'),x=mk('x','left:50%;top:50%;margin:-22px 0 0 4px;width:50px;height:44px;border-radius:14px;background:#ef4444;color:#fff','✖');
+ const lay=()=>{d.style.left=L+'px';d.style.top=T+'px';d.style.width=(R-L)+'px';d.style.height=(B-T)+'px';d.style.right='auto'};lay();APPX().append(d);
+ x.onclick=e=>{e.stopPropagation();d.remove()};
+ d.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('b[data-h]');if(!h||h.dataset.h=='x')return;e.preventDefault();e.stopPropagation();const k=h.dataset.h,sx=e.clientX,sy=e.clientY,o={L,R,T,B};try{h.setPointerCapture(e.pointerId)}catch(_){}
+  h.onpointermove=m=>{const dx=m.clientX-sx,dy=m.clientY-sy,mn=60;if(k=='m'){const w=o.R-o.L,hh=o.B-o.T;L=Math.max(0,Math.min(W()-w,o.L+dx));R=L+w;T=Math.max(0,Math.min(H()-hh,o.T+dy));B=T+hh}else{if(k.includes('l'))L=Math.min(o.R-mn,Math.max(0,o.L+dx));if(k.includes('r'))R=Math.max(o.L+mn,Math.min(W(),o.R+dx));if(k.includes('t'))T=Math.min(o.B-mn,Math.max(0,o.T+dy));if(k.includes('b'))B=Math.max(o.T+mn,Math.min(H(),o.B+dy))}lay()};
+  h.onpointerup=h.onpointercancel=()=>{h.onpointermove=null}})};
+})();
+
+
+/* ================= v25b: غرفة بالرمز + رابط للطلاب (PeerJS) ================= */
+(function(){
+const APPX=()=>document.getElementById('app')||document.body;
+const BASE=()=>(window.__WEB?location.origin+location.pathname:'https://aymanmofty-png.github.io/Html-to-apk/');
+let peer=null,code=null,role=null;
+const loadPeer=()=>new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement('script');s.src='lib/peerjs.min.js';s.onload=res;s.onerror=()=>rej(new Error('مكتبة الاتصال غير موجودة'));document.head.append(s)});
+const rid=c=>'sbt-'+c;
+function drop(P){PS=PS.filter(x=>x!=P);if(P.tl)P.tl.remove();if(P.n)hint('👋 غادر: '+P.n)}
+function bindCall(call){call.on('stream',ms=>{const P=PS.find(x=>x.id==call.peer);if(P){P.ms=ms;tile(P)}})}
+function callPeer(P){if(!peer||!lm||P.called)return;P.called=1;try{bindCall(peer.call(P.id,lm))}catch(e){}}
+function adopt(conn,host){const P={pc:{signalingState:'stable'},id:conn.peer,n:'',conn};P.dc={get readyState(){return conn.open?'open':'closed'},send:j=>conn.send(j)};PS.push(P);
+ conn.on('data',d=>{try{onMsg(P,typeof d=='string'?JSON.parse(d):d)}catch(e){}});conn.on('close',()=>drop(P));conn.on('error',()=>drop(P));
+ (async()=>{conn.send(JSON.stringify({t:'hi',n:await myN()}));if(B&&host)conn.send(JSON.stringify({t:'sync',s:B.s,bg:B.bg}))})();if(lm)callPeer(P);return P}
+function setPeerEvents(){peer.on('call',c=>{c.answer(lm||new MediaStream());bindCall(c)});peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}})}
+const mkPeerId=(id)=>new Promise((ok,no)=>{const p=id?new Peer(id,{config:CFG}):new Peer({config:CFG});const t=setTimeout(()=>no(Object.assign(new Error('تعذر الوصول لخادم الاتصال'),{type:'timeout'})),12000);p.on('open',()=>{clearTimeout(t);ok(p)});p.on('error',e=>{clearTimeout(t);no(e)})});
+function closeRoom(){PS.slice().forEach(P=>{try{P.conn&&P.conn.close()}catch(e){}});PS=[];document.querySelectorAll('.vt').forEach(x=>{if(!(x.querySelector('video')&&x.querySelector('video').muted))x.remove()});try{peer&&peer.destroy()}catch(e){}peer=null;code=null;role=null}
+function modal(html){const m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:200;background:#0008;display:flex;align-items:center;justify-content:center;direction:rtl';const c=document.createElement('div');c.style.cssText='background:var(--bg,#fff);color:var(--tx,#111);border-radius:16px;padding:18px;min-width:270px;max-width:92%;font:15px system-ui;text-align:center;box-shadow:0 8px 30px #0008';c.innerHTML=html;m.append(c);APPX().append(m);return{m,c}}
+const copy=async t=>{try{await navigator.clipboard.writeText(t);hint('📋 نُسخ')}catch(e){const a=document.createElement('textarea');a.value=t;document.body.append(a);a.select();try{document.execCommand('copy');hint('📋 نُسخ')}catch(_){}a.remove()}};
+async function shareTxt(t){try{const C=window.Capacitor;if(C&&C.Plugins&&C.Plugins.Share&&C.isNativePlatform&&C.isNativePlatform())await (window.__upright?window.__upright(()=>C.Plugins.Share.share({text:t}),{hold:1}):C.Plugins.Share.share({text:t}));else if(navigator.share)await navigator.share({text:t});else copy(t)}catch(e){}}
+function showRoom(){const link=BASE()+'?join='+code,{m,c}=modal('<b style="font-size:17px">🏠 غرفتك جاهزة</b><div style="margin:10px 0 4px;opacity:.7;font-size:13px">رمز الانضمام</div><div id="rmc" style="font:800 40px/1.2 monospace;letter-spacing:6px;direction:ltr;color:#d97706">'+code+'</div><div style="margin:10px 0 4px;opacity:.7;font-size:13px">رابط للطلاب (يفتح في المتصفح بدون تثبيت)</div><div dir="ltr" style="font-size:12px;word-break:break-all;background:#9992;border-radius:8px;padding:8px">'+link+'</div><div style="display:flex;gap:6px;margin-top:12px"><button id="rm1" style="flex:1;padding:11px;border:0;border-radius:12px;background:#f59e0b;font:700 14px system-ui">📤 إرسال الرابط</button><button id="rm2" style="flex:1;padding:11px;border:0;border-radius:12px;background:#9993;color:inherit;font:14px system-ui">📋 نسخ الرابط</button></div><div style="display:flex;gap:6px;margin-top:8px"><button id="rm3" style="flex:1;padding:11px;border:0;border-radius:12px;background:#9993;color:inherit;font:14px system-ui">🔴 إغلاق الغرفة</button><button id="rm4" style="flex:1;padding:11px;border:0;border-radius:12px;background:#9993;color:inherit;font:14px system-ui">إخفاء</button></div><div style="margin-top:10px;font-size:12px;opacity:.6">الطلاب يدخلون الرمز في التطبيق (➕ ← 🔢 انضمام بالرمز) أو يفتحون الرابط</div>');
+ c.querySelector('#rm1').onclick=()=>shareTxt('انضم إلى السبورة: '+link+'\nأو الرمز: '+code);c.querySelector('#rm2').onclick=()=>copy(link);c.querySelector('#rm3').onclick=()=>{closeRoom();m.remove();hint('🔴 أُغلقت الغرفة')};c.querySelector('#rm4').onclick=()=>m.remove()}
+async function openRoom(){if(peer&&role=='host'&&code)return showRoom();try{await myN();hint('⏳ أفتح الغرفة…');await loadPeer();let p=null;for(let t=0;t<6&&!p;t++){const c=String(Math.floor(100000+Math.random()*900000));try{p=await mkPeerId(rid(c));code=c}catch(e){if(e.type!='unavailable-id')throw e}}if(!p)throw new Error('تعذر حجز رمز');peer=p;role='host';setPeerEvents();peer.on('connection',cn=>cn.on('open',()=>{const P=adopt(cn,1);setTimeout(()=>hint('👥 انضم: '+(P.n||'مشارك')),600)}));showRoom()}catch(e){alert('تعذر فتح الغرفة: '+(e.message||e.type||e)+'\n(يمكنك استعمال الدعوة اليدوية بدلًا من ذلك)')}}
+async function joinCode(c){try{if(!c){c=(await ask('اكتب رمز الغرفة (6 أرقام)',''))||'';}c=String(c).replace(/\D/g,'');if(c.length!=6)return c?alert('الرمز يجب أن يكون 6 أرقام'):0;await myN();hint('⏳ أتصل بالغرفة…');await loadPeer();if(peer)closeRoom();peer=await mkPeerId(null);role='guest';setPeerEvents();
+  await new Promise((ok,no)=>{const cn=peer.connect(rid(c),{serialization:'json',reliable:true});const t=setTimeout(()=>no(new Error('انتهت المهلة — تأكد من الرمز أو الشبكة')),15000);peer.on('error',e=>{clearTimeout(t);no(e.type=='peer-unavailable'?new Error('الرمز غير صحيح أو المعلّم لم يفتح الغرفة'):e)});cn.on('open',()=>{clearTimeout(t);const P=adopt(cn,0);if(!B){if(!cur()){const n={id:uid(),f:null,t:'سبورة مشتركة',h:'',p:'',d:Date.now()};S.n.push(n);openN(n.id)}board(1)}hint('✅ متصل بالغرفة '+c);ok()})})}catch(e){alert('تعذر الانضمام: '+(e.message||e.type||e));try{peer&&peer.destroy()}catch(_){}peer=null}}
+window.__room={openRoom,joinCode,closeRoom};
+/* القائمة ➕ */
+{const g0=geoPop;geoPop=function(){g0();const p=$('pp');if(!p)return;const bt=[...p.querySelectorAll('button')];const set=(k,l,nk)=>{const b=p.querySelector('[data-w="'+k+'"]');if(b){b.textContent=l;if(nk)b.dataset.w=nk}};
+  set('iv','🏠 فتح غرفة (رمز + رابط)','rm');set('jn','🔢 انضمام بالرمز','jc');
+  const mb=(l,k)=>{const b=document.createElement('button');b.dataset.w=k;b.style.fontSize='16px';b.textContent=l;return b};const a=p.querySelector('[data-w="an"]');
+  if(a){a.textContent='📥 (يدوي 3) لصق رد المشارك';a.before(mb('🔗 (يدوي 1) دعوة مشارك','iv'));a.after(mb('🔑 (يدوي 2) انضمام بدعوة','jn'))}
+  const o=p.onclick;p.onclick=e=>{const k=e.target.dataset&&e.target.dataset.w;if(k=='rm'){p.hidden=true;return openRoom()}if(k=='jc'){p.hidden=true;return joinCode()}return o(e)}}}
+/* كاميرا: بعد التشغيل نتصل بالمشاركين */
+{const c0=cam;cam=async function(){const had=!!lm;await c0.apply(this,arguments);if(!had&&lm&&peer)PS.forEach(P=>P.id&&callPeer(P))}}
+/* دخول تلقائي من الرابط */
+(function auto(n){const c=new URLSearchParams(location.search).get('join');if(!c)return;if(typeof S=='undefined'||!S||!S.n){if(n<30)setTimeout(()=>auto((n||0)+1),400);return}history.replaceState(null,'',location.pathname);setTimeout(()=>joinCode(c),500)})(0);
 })();
 
 </script></body></html>
