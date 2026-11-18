@@ -371,7 +371,10 @@ jobs:
                 Intent i = new Intent(c, RoomService.class);
                 i.putExtra("text", call.getString("text", "الغرفة مفتوحة"));
                 ContextCompat.startForegroundService(c, i);
-                call.resolve();
+                JSObject rs = new JSObject();
+                rs.put("notif", androidx.core.app.NotificationManagerCompat.from(c).areNotificationsEnabled());
+                rs.put("sdk", Build.VERSION.SDK_INT);
+                call.resolve(rs);
               } catch (Exception e) {
                 call.reject(String.valueOf(e.getMessage()));
               }
@@ -388,6 +391,18 @@ jobs:
             }
 
             @PluginMethod
+            public void notifSettings(PluginCall call) {
+              try {
+                Context c = getContext();
+                Intent i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                i.putExtra(Settings.EXTRA_APP_PACKAGE, c.getPackageName());
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                c.startActivity(i);
+              } catch (Exception e) {}
+              call.resolve();
+            }
+
+            @PluginMethod
             public void battery(PluginCall call) {
               JSObject r = new JSObject();
               try {
@@ -395,6 +410,8 @@ jobs:
                 PowerManager pm = (PowerManager) c.getSystemService(Context.POWER_SERVICE);
                 boolean ign = pm.isIgnoringBatteryOptimizations(c.getPackageName());
                 r.put("ignoring", ign);
+                r.put("notif", androidx.core.app.NotificationManagerCompat.from(c).areNotificationsEnabled());
+                r.put("running", RoomService.running);
                 if (!ign && call.getBoolean("ask", false)) {
                   Intent i = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + c.getPackageName()));
                   i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
