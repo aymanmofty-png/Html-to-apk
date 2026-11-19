@@ -3775,19 +3775,22 @@ const keyOf=d=>d.vid+':'+d.pid,profOf=d=>d?(PROF()[keyOf(d)]||BUILTIN[keyOf(d)]|
 const status=s=>{ST.status=s;const e=$i('tsst');if(e)e.textContent=s};
 function pickDev(l){let c=l.filter(d=>TABV.includes(d.vid));if(!c.length&&RS().pick)c=l.filter(d=>keyOf(d)==RS().pick);return c[0]||null}
 window.__rawLive=()=>ST.reading&&!!ST.prof&&!ST.noInj;
-window.__rawWant=()=>{try{return !!(NB()&&RS().src!='android'&&ST.dev&&ST.prof)}catch(e){return false}};
+window.__rawWant=()=>{try{return !!(NB()&&RS().src!='android'&&ST.dev&&ST.prof&&!ST.failed)}catch(e){return false}};
+const reori=()=>{try{if(B&&T().on){orient(1);setTimeout(updateRot,100)}}catch(e){}};
+function tabOn(v){const t=T(),b=$i('tbn');if(v&&!t.on){t.on=1;PC=null;LE=null;try{fsOn(1)}catch(e){}orient(1);b&&b.classList.remove('off');persist();try{showTW()}catch(e){}}else if(!v&&t.on){t.on=0;try{fsOn(0)}catch(e){}orient(0);b&&b.classList.add('off');persist();stopRaw(true);try{showTW()}catch(e){}}}
 async function scan(){const nb=NB();if(!nb)return;const l=nb.jr('usbList');if(!Array.isArray(l))return;ST.all=l;const d=pickDev(l);
  if(!d){if(ST.dev){if(ST.reading)stopRaw(true);ST.dev=null;ST.prof=null;status('فُصل اللوح');}return}
  if(!ST.dev||keyOf(ST.dev)!=keyOf(d)){ST.dev=d;ST.prof=profOf(d);ST.hint=0;if(ST.reading)stopRaw(true);status(ST.prof?'تم اكتشاف '+(ST.prof.name||d.product||'اللوح')+' (ملف جاهز)':'لوح جديد: '+(d.product||keyOf(d))+' — غير معروف بعد')}else ST.dev=d;
  if(!ST.prof){if(!ST.hint&&B&&T().on){ST.hint=1;hint('لوح جديد غير معروف. افتح ➕ ← «إعدادات اللوح» ← «تعلّم لوحاً جديداً»')}return}
+ if(B&&!T().on&&RS().auto!==false&&RS().src!='android'&&!ST.failed&&ST.autoB!==B){ST.autoB=B;tabOn(1)}
  if(B&&T().on&&RS().src!='android'&&!ST.reading&&!ST.busy&&!ST.failed)startRaw()}
 async function startRaw(learnMode){const nb=NB();if(!nb||ST.busy||ST.reading||!ST.dev)return false;ST.busy=1;const d=ST.dev;
  try{let a=nb.s('usbAsk',d.vid,d.pid);if(a!='granted'){status('اسمح بإذن USB في النافذة…');for(let i=0;i<60;i++){await sleep(500);const s=nb.s('usbState');if(s=='granted'||s=='denied')break}a=nb.s('usbState')}
-  if(a!='granted'){status('لم يُمنح إذن USB — يعمل اللوح بالطريقة العادية');ST.failed=1;ST.busy=0;return false}
-  const r=nb.jr('usbStart',d.vid,d.pid);if(!r||r.error){status('تعذر فتح اللوح: '+((r&&r.error)||'')+' — يعمل بالطريقة العادية');ST.failed=1;ST.busy=0;return false}
-  ST.descs=r.descs||[];ST.reading=true;ST.busy=0;ST.noInj=!!learnMode;ST.timer=setInterval(pollRaw,8);status(learnMode?'قراءة اللوح للتعلّم…':'القراءة الخام تعمل ✔');return true}
- catch(e){status('خطأ: '+e);ST.busy=0;return false}}
-function stopRaw(quiet){clearInterval(ST.timer);ST.timer=null;try{NB()&&NB().s('usbStop')}catch(e){}ST.reading=false;release();if(!quiet)status('تم إيقاف القراءة الخام — أعد توصيل اللوح ليعود للنظام')}
+  if(a!='granted'){status('لم يُمنح إذن USB — يعمل اللوح بالطريقة العادية (القديمة)');ST.failed=1;ST.busy=0;reori();return false}
+  const r=nb.jr('usbStart',d.vid,d.pid);if(!r||r.error){status('تعذر فتح اللوح: '+((r&&r.error)||'')+' — يعمل بالطريقة العادية (القديمة)');ST.failed=1;ST.busy=0;reori();return false}
+  ST.descs=r.descs||[];ST.reading=true;ST.busy=0;ST.noInj=!!learnMode;ST.failed=0;ST.timer=setInterval(pollRaw,8);reori();status(learnMode?'قراءة اللوح للتعلّم…':'القراءة الخام تعمل ✔');return true}
+ catch(e){status('خطأ: '+e);ST.busy=0;ST.failed=1;reori();return false}}
+function stopRaw(quiet){clearInterval(ST.timer);ST.timer=null;try{NB()&&NB().s('usbStop')}catch(e){}ST.reading=false;release();if(!quiet){ST.failed=1;status('تم إيقاف القراءة الخام — أعد توصيل اللوح ليعود للنظام');reori()}}
 function pollRaw(){const nb=NB();if(!nb)return;const a=nb.jr('usbPoll');if(!a||!a.length)return;
  for(const l of a){const k=l.indexOf('|'),tg=l.slice(0,k),b=HX(l.slice(k+1));if(ST.tap)ST.tap(tg,b);if(ST.noInj||!ST.prof)continue;if(tg.indexOf(ST.prof.tag)!=0)continue;ST.cnt++;onRep(b)}}
 /* ---------- الربط بالسبورة ---------- */
@@ -3810,7 +3813,8 @@ function btnSet(n,on){if(!!on==!!ST['b'+n])return;ST['b'+n]=on?1:0;const act=RS(
  try{if(act=='er'){if(on){ST.prev=B.tool;tool('er',1)}else tool(ST.prev&&ST.prev!='er'?ST.prev:'pen',1)}
   else if(act=='tg'){if(on){if(B.tool=='er')tool(ST.prev&&ST.prev!='er'?ST.prev:'pen',1);else{ST.prev=B.tool;tool('er',1)}}}
   else if(act=='undo'){if(on)undo(1)}else if(act=='redo'){if(on)undo(0)}}catch(e){}}
-function onRep(b){const P=ST.prof,d=dec(P,b),now=performance.now();if(!d||d.leave||!d.prox){if(ST.present||ST.down)release();return}
+function onRep(b){const P=ST.prof,d=dec(P,b),now=performance.now();if(d&&!d.leave){ST.live={u:d.u,v:d.v,p:d.p,tip:d.tip,prox:d.prox,b1:d.b1,b2:d.b2,t:now,n:(ST.live?ST.live.n:0)+1}}if(!d||d.leave||!d.prox){if(ST.present||ST.down)release();return}
+ if(SET&&!ST.cap){if(ST.present||ST.down)release();return}
  if(ST.cap){ST.cap(d,b);return}if(!B||!T().on)return;
  ST.lastT=now;ST.present=true;btnSet(1,d.b1);btnSet(2,d.b2);
  const c=!!d.tip,[X,Y]=mapPt(P,d.u,d.v,c,now),pr=Math.max(.02,curve(d.p));
@@ -3835,7 +3839,11 @@ let SET=null;
 function openSet(){if(SET)return;const R=RS(),t=T(),o=document.createElement('div');SET=o;o.id='tsw';o.style.cssText=CSS;
  const acts=[['er','ممحاة (أثناء الضغط)'],['tg','تبديل ممحاة/قلم'],['undo','تراجع'],['redo','إعادة'],['none','لا شيء']];
  o.innerHTML='<div style="display:flex;gap:6px;align-items:center"><b style="flex:1;font-size:17px">⚙ إعدادات اللوح</b><button data-a="x" style="'+BT('#b91c1c')+'">إغلاق</button></div>'
- +'<div id="tsst" style="font-size:12px;color:#fbbf24;min-height:16px"></div>'
+ +'<div id="tsst" style="font-size:13px;color:#fbbf24;min-height:16px"></div>'
+ +'<button data-a="tgo" id="tstg" style="'+BT()+';font-size:16px;padding:14px"></button>'
+ +'<div style="display:flex;gap:6px"><button data-a="rs" style="'+BT('#2563eb')+';flex:1">ابدأ القراءة الخام الآن</button></div>'
+ +'<div id="tslv" style="display:flex;gap:10px;align-items:center;background:#1e293b;border-radius:10px;padding:8px"><div id="tsbx" style="position:relative;width:128px;height:80px;background:#0b1220;border:1px solid #475569;border-radius:6px;flex:none"><div id="tsdt" style="position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#64748b;left:50%;top:50%"></div></div><div id="tstx" style="font:13px/1.7 system-ui;direction:rtl;text-align:right;flex:1;white-space:pre-line">لا بيانات بعد — حرّك القلم فوق اللوح</div></div>'
+ +sec('تشغيل وضع اللوح تلقائياً عند فتح سبورة')+seg('tsau',[['1','تلقائي'],['0','يدوي']],R.auto===false?'0':'1')
  +sec('اتجاه اللوح (كيف تضعه أمامك)')+seg('tsq',[[0,'عرضي'],[1,'طولي (١)'],[2,'عرضي مقلوب'],[3,'طولي (٢)']],((t.adj|0)%4))
  +'<button data-a="aq" style="'+BT('#2563eb')+'">اضبط الاتجاه تلقائياً (ارسم خطاً من يسارك ليمينك)</button>'
  +sec('طريقة الربط بالسبورة')+seg('tsm',[['rel','نسبي كالفأرة (بنسبة اللوح)'],['fill','ملء الشاشة (متناسب)'],['contain','اللوح كله (متناسب)'],['stretch','تمديد كامل']],R.mode)
@@ -3849,18 +3857,21 @@ function openSet(){if(SET)return;const R=RS(),t=T(),o=document.createElement('di
  +'<div id="tsdev" style="font-size:12px;color:#cbd5e1"></div>'
  +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button data-a="learn" style="'+BT('#16a34a')+';flex:1">تعلّم لوحاً جديداً / أعد التشخيص</button><button data-a="del" style="'+BT()+';flex:1">حذف ملف اللوح المحفوظ</button><button data-a="stop" style="'+BT()+';flex:1">إيقاف القراءة الخام</button><button data-a="dg" style="'+BT()+';flex:1">تقرير التشخيص</button></div>';
  (APP()).append(o);
- const dv=()=>{const e=$i('tsdev');if(!e)return;const l=ST.all||[];e.textContent='أجهزة USB: '+(l.length?l.map(d=>(d.product||'?')+' ['+keyOf(d)+']'+(ST.dev&&keyOf(d)==keyOf(ST.dev)?' ✔':'')).join(' | '):'لا يوجد')+(ST.prof?'\nالملف: '+(ST.prof.name||ST.prof.src):'')};dv();status(ST.status||'—');
+ const upd=()=>{const g=$i('tstg');if(g){const on=!!T().on;g.textContent=on?'✍ وضع اللوح: مفعّل — اضغط للإيقاف':'✍ وضع اللوح: متوقف — اضغط للتشغيل';g.style.background=on?'#16a34a':'#b45309'}const L=ST.live,d=$i('tsdt'),x=$i('tstx');if(!x)return;if(!ST.reading){x.textContent='القراءة الخام غير شغّالة'+(ST.dev?'':' (لا لوح متصل)');if(d)d.style.background='#64748b';return}if(!L||performance.now()-L.t>500){x.textContent=ST.cnt||L?'القلم خارج نطاق اللوح (أو لا تقارير الآن)':'لا بيانات بعد — حرّك القلم فوق اللوح';if(d)d.style.background='#64748b';return}if(d){d.style.left=(L.u*100)+'%';d.style.top=(L.v*100)+'%';d.style.background=L.tip?'#22c55e':'#fbbf24'}x.textContent='x '+L.u.toFixed(3)+'  y '+L.v.toFixed(3)+'\nضغط '+Math.round(L.p*100)+'%  '+(L.tip?'لمس':'تحليق')+'\nزر١ '+(L.b1?'●':'○')+'  زر٢ '+(L.b2?'●':'○')+'  #'+L.n};
+ const dv=()=>{upd();const e=$i('tsdev');if(!e)return;const l=ST.all||[];e.textContent='أجهزة USB: '+(l.length?l.map(d=>(d.product||'?')+' ['+keyOf(d)+']'+(ST.dev&&keyOf(d)==keyOf(ST.dev)?' ✔':'')).join(' | '):'لا يوجد')+(ST.prof?'\nالملف: '+(ST.prof.name||ST.prof.src):'')};dv();status(ST.status||'—');
  setSeg(o,'tsq',v=>{t.adj=+v;t.R=null;persist()});setSeg(o,'tsm',v=>{R.mode=v;persist()});setSeg(o,'tsa',v=>{R.an=+v;persist()});setSeg(o,'tsp',v=>{R.ph=v;persist();try{const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.ScreenOrientation;if(P&&window.__rawWant())v=='a'?P.unlock():P.lock({orientation:'portrait'})}catch(e){}});
- setSeg(o,'tsb1',v=>{R.b1=v;persist()});setSeg(o,'tsb2',v=>{R.b2=v;persist()});setSeg(o,'tspc',v=>{R.pc=v;persist()});setSeg(o,'tssrc',v=>{R.src=v;persist();ST.failed=0});
+ setSeg(o,'tsb1',v=>{R.b1=v;persist()});setSeg(o,'tsb2',v=>{R.b2=v;persist()});setSeg(o,'tspc',v=>{R.pc=v;persist()});setSeg(o,'tssrc',v=>{R.src=v;persist();ST.failed=0;reori()});setSeg(o,'tsau',v=>{R.auto=v=='1';persist()});
  const k=o.querySelector('#tsk');k.oninput=()=>{R.k=+k.value;$i('tsv').textContent='×'+R.k};k.onchange=()=>persist();
  o.addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
   if(a=='x'){o.remove();SET=null;return}
   if(a=='aq'){o.style.display='none';orientWiz().then(()=>{o.style.display='flex';const qq=((T().adj|0)%4);o.querySelectorAll('#tsq button').forEach(x=>x.style.background=(+x.dataset.v==qq)?'#16a34a':'#334155')});return}
   if(a=='learn'){o.style.display='none';learnWiz().then(()=>{o.style.display='flex';dv()});return}
   if(a=='del'){if(ST.dev){delete PROF()[keyOf(ST.dev)];ST.prof=profOf(ST.dev);persist();status(ST.prof?'عاد الملف الجاهز':'حُذف الملف — اللوح غير معروف الآن')}return}
-  if(a=='stop'){stopRaw();return}
+  if(a=='tgo'){if(!B){hint('افتح سبورة أولاً');return}tabOn(!T().on);if(T().on){ST.failed=0;if(window.__rawWant()||ST.dev)startRaw()}upd();return}
+  if(a=='rs'){ST.failed=0;if(!ST.dev){status('لا يوجد لوح متصل (تحقق من الـOTG)');return}if(ST.reading)stopRaw(true);startRaw().then(()=>{upd()});return}
+  if(a=='stop'){stopRaw();upd();return}
   if(a=='dg'){o.remove();SET=null;window.__diag&&window.__diag.open();return}});
- const iv=setInterval(()=>{if(!SET){clearInterval(iv);return}dv()},1500)}
+ const iv=setInterval(()=>{if(!SET){clearInterval(iv);return}upd()},120);const iv2=setInterval(()=>{if(!SET){clearInterval(iv2);return}dv()},1500)}
 /* ---------- معالج ضبط الاتجاه تلقائياً ---------- */
 async function orientWiz(){const o=document.createElement('div');o.style.cssText=CSS;o.innerHTML='<b style="font-size:17px">ضبط الاتجاه</b><div style="font-size:15px;line-height:1.7">ضع اللوح كما ستكتب عليه، ثم <b>ارسم بالقلم خطاً طويلاً من يسارك إلى يمينك</b> (كما تراه أنت). ثم ارفع القلم.</div><div id="owm" style="color:#fbbf24;min-height:20px"></div><div style="display:flex;gap:6px"><button data-a="c" style="'+BT('#b91c1c')+';flex:1">إلغاء</button></div>';APP().append(o);
  if(!ST.dev||!ST.prof){o.querySelector('#owm').textContent='لا يوجد لوح معروف متصل.';await sleep(1800);o.remove();return}
