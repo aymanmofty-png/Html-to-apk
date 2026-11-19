@@ -3662,7 +3662,7 @@ function build(){const nb=NB();let s='=== تقرير تشخيص اللوح ===\n
  if(D.descs)s+='\n--- HID report descriptors ---\n'+D.descs.map(d=>'iface '+d.iface+': '+d.hex).join('\n')+'\n';
  s+='\n--- الخطوات ---\n';D.res.forEach((r,i)=>{s+=(r.round==2?'[جولة USB خام] ':'[جولة أندرويد] ')+((r.si||0)+1)+'. '+STEPS[r.si||0]+'\n'+fmtCur(r)});return s}
 function ui(){const o=document.createElement('div');o.id='dgw';o.style.cssText='position:fixed;inset:0;z-index:300;background:#0f172a;color:#fff;font:14px system-ui;direction:rtl;display:flex;flex-direction:column;padding:10px;gap:8px;overflow:auto';
- o.innerHTML='<div style="display:flex;gap:6px;align-items:center"><b style="flex:1;font-size:17px">🖊 تشخيص اللوح</b><button data-a="x" style="padding:8px 14px;border:0;border-radius:10px;background:#b91c1c;color:#fff">إغلاق</button></div>'
+ o.innerHTML='<div style="display:flex;gap:6px;align-items:center"><b style="flex:1;font-size:17px">🖊 تشخيص اللوح <small style="font-weight:400;color:#94a3b8">v3 · '+STEPS.length+' خطوة</small></b><button data-a="x" style="padding:8px 14px;border:0;border-radius:10px;background:#b91c1c;color:#fff">إغلاق</button></div>'
  +'<div style="font-size:13px;color:#cbd5e1">وصّل اللوح بالـOTG. نفّذ الخطوات بالترتيب بالقلم، ثم اضغط «أرسل التقرير». اختياري: «USB خام» يقرأ بيانات اللوح الأصلية (يوقف القلم مؤقتاً أثناء القراءة؛ أعد توصيل اللوح بعده).</div>'
  +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button data-a="cap" style="'+B()+'">Pointer Capture: متوقف</button><button data-a="usb" style="'+B()+'">USB خام: متوقف</button></div>'
  +'<div id="dgs" style="font-size:12px;color:#fbbf24;min-height:16px"></div>'
@@ -3671,9 +3671,9 @@ function ui(){const o=document.createElement('div');o.id='dgw';o.style.cssText='
  +'<textarea id="dgt" readonly style="height:90px;direction:ltr;font:11px monospace;background:#020617;color:#a7f3d0;border:0;border-radius:8px"></textarea>';return o}
 const B=c=>'border:0;border-radius:10px;padding:10px 12px;background:'+(c||'#334155')+';color:#fff;font:600 14px system-ui';
 function st(t){const e=$i('dgs');if(e)e.textContent=t}
-async function step(){if(D.busy)return;const i=D.i;if(i>=STEPS.length){st(D.usb?'اكتملت جولة USB — اضغط أرسل التقرير':'اكتملت الجولة الأولى. الآن اضغط «USB خام» ثم أعد الخطوات (جولة ثانية)، أو أرسل التقرير');return}D.busy=1;const p=$i('dgp');let t=5;p.textContent=STEPS[i]+' — '+t;
- webCap(true);const nb=NB();if(nb)nb.s('diagEvents',true);const iv=setInterval(()=>{pollNat();t--;p.textContent=STEPS[i]+' — '+Math.max(t,0)},1000),pl=setInterval(pollNat,150);
- await new Promise(r=>setTimeout(r,5200));clearInterval(iv);clearInterval(pl);pollNat();webCap(false);if(nb)nb.s('diagEvents',false);D.cur.si=i;D.cur.round=D.usb?2:1;D.res.push(D.cur);D.cur=null;D.i++;D.busy=0;p.textContent=D.i<STEPS.length?'تمت. التالي: '+STEPS[D.i]:'اكتملت كل الخطوات ✔';
+async function step(){if(D.busy)return;const i=D.i;if(i>=STEPS.length){st(D.usb?'اكتملت جولة USB — اضغط أرسل التقرير':'اكتملت الجولة الأولى. الآن اضغط «USB خام» ثم أعد الخطوات (جولة ثانية)، أو أرسل التقرير');return}D.busy=1;const p=$i('dgp');let t=5;p.textContent=(i+1)+'/'+STEPS.length+' — '+STEPS[i]+' — '+t;
+ webCap(true);const nb=NB();if(nb)nb.s('diagEvents',true);const iv=setInterval(()=>{pollNat();t--;p.textContent=(i+1)+'/'+STEPS.length+' — '+STEPS[i]+' — '+Math.max(t,0)},1000),pl=setInterval(pollNat,150);
+ await new Promise(r=>setTimeout(r,5200));clearInterval(iv);clearInterval(pl);pollNat();webCap(false);if(nb)nb.s('diagEvents',false);D.cur.si=i;D.cur.round=D.usb?2:1;D.res.push(D.cur);D.cur=null;D.i++;D.busy=0;p.textContent=D.i<STEPS.length?'تمت. التالي ('+(D.i+1)+'/'+STEPS.length+'): '+STEPS[D.i]:'اكتملت كل الخطوات ✔';
  const c=D.res[D.res.length-1];st('الخطوة '+(i+1)+': ويب '+Object.keys(c.web).length+' | أندرويد '+Object.keys(c.nat).length+' | USB '+Object.keys(c.usb).length)}
 async function usbToggle(b){const nb=NB();if(!nb){st('USB متاح داخل التطبيق الأصلي فقط');return}
  if(D.usb){nb.s('usbStop');D.usb=0;b.textContent='USB خام: متوقف';st('أوقفت القراءة — إن توقف القلم أعد توصيل اللوح');return}
