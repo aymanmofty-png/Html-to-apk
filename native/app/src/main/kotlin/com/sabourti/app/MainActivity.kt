@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, perms: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(requestCode: Int, perms: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, perms, grantResults)
         if (requestCode == 77) unlockPortrait()
     }
