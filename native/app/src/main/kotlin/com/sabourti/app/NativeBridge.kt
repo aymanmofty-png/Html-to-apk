@@ -203,6 +203,7 @@ class NativeBridge(private val a: MainActivity) {
     @JavascriptInterface fun usbAsk(vid: Int, pid: Int): String = try { a.diag.usbAsk(vid, pid) } catch (e: Exception) { "error:" + (e.message ?: "") }
     @JavascriptInterface fun usbState(): String = a.diag.permState
     @JavascriptInterface fun usbStart(vid: Int, pid: Int): String = try { a.diag.usbStart(vid, pid) } catch (e: Exception) { err(e) }
+    @JavascriptInterface fun rawBlocked(): String = try { a.diag.blocked.toString() } catch (e: Exception) { "" }
     @JavascriptInterface fun usbPoll(): String = try { a.diag.usbPoll() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun usbStop(): String { try { a.diag.usbStop() } catch (_: Exception) {}; return ok() }
     @JavascriptInterface fun capStart(): Boolean = try { a.diag.capStart() } catch (e: Exception) { false }

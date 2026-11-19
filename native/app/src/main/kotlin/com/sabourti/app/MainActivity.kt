@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
+import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.PointerIcon
 import android.view.View
@@ -369,7 +370,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** أثناء القراءة الخام: أحداث القلم/الفأرة من أندرويد تُسقط (اللوح يُقرأ مباشرة). لمس الإصبع لا يتأثر. */
+    private fun isPenOrMouse(ev: MotionEvent): Boolean {
+        val t = ev.getToolType(0)
+        if (t == MotionEvent.TOOL_TYPE_STYLUS || t == MotionEvent.TOOL_TYPE_ERASER || t == MotionEvent.TOOL_TYPE_MOUSE) return true
+        val s = ev.source
+        return (s and InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE || (s and InputDevice.SOURCE_STYLUS) == InputDevice.SOURCE_STYLUS
+    }
+
     override fun dispatchGenericMotionEvent(ev: MotionEvent): Boolean {
+        if (diag.rawOn && !diag.evOn && isPenOrMouse(ev)) {
+            diag.blocked++
+            return true
+        }
         val r = super.dispatchGenericMotionEvent(ev)
         diag.onMotion(ev, "gen")
         val n = SystemClock.uptimeMillis()
@@ -381,6 +394,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (diag.rawOn && !diag.evOn && isPenOrMouse(ev)) {
+            diag.blocked++
+            return true
+        }
         val r = super.dispatchTouchEvent(ev)
         diag.onMotion(ev, "touch")
         val n = SystemClock.uptimeMillis()

@@ -22,6 +22,13 @@ class Diag(private val a: MainActivity) {
 
     @Volatile
     var evOn = false
+
+    /** القراءة الخام شغّالة: تُسقط الواجهة أحداث القلم/الفأرة القادمة من أندرويد. */
+    @Volatile
+    var rawOn = false
+
+    @Volatile
+    var blocked = 0
     private val evs = ArrayList<String>()
     private val usbRep = ArrayList<String>()
     private val threads = ArrayList<Thread>()
@@ -167,6 +174,7 @@ class Diag(private val a: MainActivity) {
                     val b = ByteArray(maxOf(ep.maxPacketSize, 64))
                     while (running) {
                         val k = try { c.bulkTransfer(ep, b, b.size, 200) } catch (_: Exception) { -1 }
+                        if (k < 0) try { Thread.sleep(5) } catch (_: Exception) {}
                         if (k > 0) synchronized(usbRep) { if (usbRep.size < 8000) usbRep.add("$tag|" + hex(b, k)) }
                     }
                 }
@@ -175,6 +183,8 @@ class Diag(private val a: MainActivity) {
                 threads.add(t)
             }
         }
+        rawOn = threads.size > 0
+        blocked = 0
         return JSONObject().put("descs", descs).put("threads", threads.size).toString()
     }
 
@@ -188,6 +198,7 @@ class Diag(private val a: MainActivity) {
 
     fun usbStop() {
         running = false
+        rawOn = false
         threads.forEach { try { it.join(300) } catch (_: Exception) {} }
         threads.clear()
         try {
