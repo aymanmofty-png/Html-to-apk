@@ -1,0 +1,65 @@
+name: Build native APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install web dependencies (pdf.js, peerjs)
+        run: npm install --no-audit --no-fund
+
+      - name: Prepare web files (libs + Arabic fonts)
+        run: |
+          mkdir -p www/lib
+          cp node_modules/pdfjs-dist/build/pdf.min.js www/lib/pdf.min.js
+          cp node_modules/pdfjs-dist/build/pdf.worker.min.js www/lib/pdf.worker.min.js
+          cp node_modules/peerjs/dist/peerjs.min.js www/lib/peerjs.min.js
+          node scripts/getfonts.js || true
+
+      - name: Copy web app into native assets and inject the bridge shim
+        run: |
+          A=native/app/src/main/assets/www
+          rm -rf "$A"; mkdir -p "$A"
+          cp -r www/. "$A/"
+          rm -f "$A/index (3).html"
+          cp native/shim/native-shim.js "$A/native-shim.js"
+          sed -i '0,/<head>/s//<head><script src="native-shim.js"><\/script>/' "$A/index.html"
+          grep -c 'native-shim.js' "$A/index.html"
+          ls -la "$A" | head -30
+
+      - name: Use fixed signing key (so updates keep app data)
+        run: |
+          mkdir -p ~/.android
+          cp keystore/debug.keystore ~/.android/debug.keystore
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+
+      - name: Build debug APK
+        run: gradle -p native :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-debug-apk
+          path: native/app/build/outputs/apk/debug/app-debug.apk
