@@ -3476,7 +3476,7 @@ window.__stu={start:startStudent,leave,guests,tx,get on(){return!!STU},HP};
 /* ================= v27: بقاء الغرفة في الخلفية (خدمة أمامية) + تشخيص ================= */
 (function(){
 const C=window.Capacitor,nat=()=>!!(C&&C.isNativePlatform&&C.isNativePlatform());let K=null,on=0,lastLm=0,shown=0,failAt=0;const info={};
-const plug=()=>{if(!nat())return null;if(!K)try{K=C.registerPlugin('RoomKeep')}catch(e){info.err=String(e&&e.message||e)}return K};
+const plug=()=>{if(!nat())return null;if(!K){try{if(typeof C.registerPlugin=='function')K=C.registerPlugin('RoomKeep')}catch(e){}if(!K&&C.Plugins&&C.Plugins.RoomKeep)K=C.Plugins.RoomKeep;if(!K)info.err='إضافة RoomKeep غير موجودة في هذا التطبيق (ثبّت النسخة الأحدث)'}return K};
 const live=()=>(typeof PS!='undefined'&&PS.length>0)||(window.__room&&window.__room.status()!='none')||!!(window.__dly&&window.__dly.on());
 async function refresh(){const p=plug();if(!p)return;try{const r=await p.battery({});info.ign=!!r.ignoring;info.notif=r.notif;info.run=r.running}catch(e){info.err=String(e&&e.message||e)}}
 async function askBat(){const p=plug();if(!p)return;try{await refresh();if(info.ign&&info.notif!==false)return;S.batAsk=1;persist();
