@@ -27,6 +27,10 @@
     },
     StatusBar:{hide:function(){return Promise.resolve()}}
   };
+  window.__nb={
+    jr:function(f){var a=Array.prototype.slice.call(arguments,1);try{return JSON.parse(NB[f].apply(NB,a))}catch(e){return null}},
+    s:function(f){var a=Array.prototype.slice.call(arguments,1);try{return NB[f].apply(NB,a)}catch(e){return null}}
+  };
   window.Capacitor={
     isNativePlatform:function(){return true},
     getPlatform:function(){return 'android'},

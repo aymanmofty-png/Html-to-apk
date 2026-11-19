@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -54,13 +55,53 @@ class MainActivity : ComponentActivity() {
     private var askedDnd = false
     private var lastHide = 0L
     private var overlayAdded = false
+    val diag by lazy { Diag(this) }
+    private var lockDepth = 0
+    private var savedOri = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    private var restoreOnResume = false
+
+    /** يثبّت الشاشة عمودية مؤقتاً أثناء أي واجهة نظام (حوار/منتقي/إذن/إعدادات). */
+    fun lockPortrait() {
+        if (lockDepth == 0) savedOri = requestedOrientation
+        lockDepth++
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    }
+
+    fun unlockPortrait() {
+        if (lockDepth == 0) return
+        lockDepth--
+        if (lockDepth == 0) requestedOrientation = savedOri
+    }
+
+    fun setOri(v: Int) {
+        if (lockDepth > 0) savedOri = v else requestedOrientation = v
+    }
+
+    fun startPortrait(i: Intent) {
+        lockPortrait()
+        restoreOnResume = true
+        try {
+            startActivity(i)
+        } catch (e: Exception) {
+            restoreOnResume = false
+            unlockPortrait()
+            throw e
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, perms: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, perms, grantResults)
+        if (requestCode == 77) unlockPortrait()
+    }
 
     private val chooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        unlockPortrait()
         fileCb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(r.resultCode, r.data))
         fileCb = null
     }
 
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        unlockPortrait()
         val req = pendingReq
         pendingReq = null
         if (req != null) {
@@ -181,6 +222,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         pendingReq?.deny()
                         pendingReq = req
+                        lockPortrait()
                         permissions.launch(need.toTypedArray())
                     }
                 }
@@ -191,10 +233,12 @@ class MainActivity : ComponentActivity() {
             ): Boolean {
                 fileCb?.onReceiveValue(null)
                 fileCb = cb
+                lockPortrait()
                 return try {
                     chooser.launch(p.createIntent())
                     true
                 } catch (e: Exception) {
+                    unlockPortrait()
                     fileCb = null
                     cb.onReceiveValue(null)
                     false
@@ -204,7 +248,7 @@ class MainActivity : ComponentActivity() {
             override fun onJsAlert(v: WebView, url: String, msg: String, r: JsResult): Boolean {
                 AlertDialog.Builder(this@MainActivity).setMessage(msg)
                     .setPositiveButton("حسناً") { _, _ -> r.confirm() }
-                    .setOnCancelListener { r.cancel() }.show()
+                    .setOnCancelListener { r.cancel() }.also { it.setOnDismissListener { unlockPortrait() } }.also { lockPortrait() }.show()
                 return true
             }
 
@@ -212,7 +256,7 @@ class MainActivity : ComponentActivity() {
                 AlertDialog.Builder(this@MainActivity).setMessage(msg)
                     .setPositiveButton("موافق") { _, _ -> r.confirm() }
                     .setNegativeButton("إلغاء") { _, _ -> r.cancel() }
-                    .setOnCancelListener { r.cancel() }.show()
+                    .setOnCancelListener { r.cancel() }.also { it.setOnDismissListener { unlockPortrait() } }.also { lockPortrait() }.show()
                 return true
             }
 
@@ -224,7 +268,7 @@ class MainActivity : ComponentActivity() {
                 AlertDialog.Builder(this@MainActivity).setMessage(msg).setView(et)
                     .setPositiveButton("موافق") { _, _ -> r.confirm(et.text.toString()) }
                     .setNegativeButton("إلغاء") { _, _ -> r.cancel() }
-                    .setOnCancelListener { r.cancel() }.show()
+                    .setOnCancelListener { r.cancel() }.also { it.setOnDismissListener { unlockPortrait() } }.also { lockPortrait() }.show()
                 return true
             }
         }
@@ -253,6 +297,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (restoreOnResume) {
+            restoreOnResume = false
+            unlockPortrait()
+        }
         web.onResume()
         web.resumeTimers()
         immersive()
@@ -323,6 +371,7 @@ class MainActivity : ComponentActivity() {
 
     override fun dispatchGenericMotionEvent(ev: MotionEvent): Boolean {
         val r = super.dispatchGenericMotionEvent(ev)
+        diag.onMotion(ev, "gen")
         val n = SystemClock.uptimeMillis()
         if (n - lastHide > 60) {
             lastHide = n
@@ -333,6 +382,7 @@ class MainActivity : ComponentActivity() {
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         val r = super.dispatchTouchEvent(ev)
+        diag.onMotion(ev, "touch")
         val n = SystemClock.uptimeMillis()
         if (n - lastHide > 150) {
             lastHide = n

@@ -35,6 +35,10 @@ jobs:
           cp node_modules/pdfjs-dist/build/pdf.min.js _site/lib/pdf.min.js
           cp node_modules/pdfjs-dist/build/pdf.worker.min.js _site/lib/pdf.worker.min.js
           cp node_modules/peerjs/dist/peerjs.min.js _site/lib/peerjs.min.js
+          npm install --no-save @daily-co/daily-js@0.73.0 || echo "daily-js not installed"
+          D=$(node -e "try{const p=require('@daily-co/daily-js/package.json');console.log(require('path').join('node_modules/@daily-co/daily-js',p.main))}catch(e){}")
+          if [ -n "$D" ] && [ -f "$D" ]; then cp "$D" _site/lib/daily.js; echo "daily.js bundled"; fi
+
           sed -i '0,/<head>/s//<head><script>window.__WEB=1<\/script>/' _site/index.html
           touch _site/.nojekyll
           grep -c "__WEB=1" _site/index.html

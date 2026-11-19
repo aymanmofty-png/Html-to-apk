@@ -32,6 +32,10 @@ jobs:
           cp node_modules/pdfjs-dist/build/pdf.min.js www/lib/pdf.min.js
           cp node_modules/pdfjs-dist/build/pdf.worker.min.js www/lib/pdf.worker.min.js
           cp node_modules/peerjs/dist/peerjs.min.js www/lib/peerjs.min.js
+          npm install --no-save @daily-co/daily-js@0.73.0 || echo "daily-js not installed"
+          D=$(node -e "try{const p=require('@daily-co/daily-js/package.json');console.log(require('path').join('node_modules/@daily-co/daily-js',p.main))}catch(e){}")
+          if [ -n "$D" ] && [ -f "$D" ]; then cp "$D" www/lib/daily.js; echo "daily.js bundled"; fi
+
           node scripts/getfonts.js || true
 
       - name: Copy web app into native assets and inject the bridge shim

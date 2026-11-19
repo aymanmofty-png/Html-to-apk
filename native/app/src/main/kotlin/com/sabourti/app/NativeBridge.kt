@@ -107,7 +107,7 @@ class NativeBridge(private val a: MainActivity) {
                 if (title.isNotEmpty()) i.putExtra(Intent.EXTRA_SUBJECT, title)
                 val c = Intent.createChooser(i, title.ifEmpty { null })
                 c.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                a.startActivity(c)
+                a.startPortrait(c)
             } catch (_: Exception) {
             }
         }
@@ -124,7 +124,7 @@ class NativeBridge(private val a: MainActivity) {
             "landscape-secondary" -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
             else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
-        a.runOnUiThread { try { a.requestedOrientation = v } catch (_: Exception) {} }
+        a.runOnUiThread { try { a.setOri(v) } catch (_: Exception) {} }
         return ok()
     }
 
@@ -136,6 +136,7 @@ class NativeBridge(private val a: MainActivity) {
                 if (Build.VERSION.SDK_INT >= 33 &&
                     a.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
                 ) {
+                    a.lockPortrait()
                     a.requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 77)
                 }
             } catch (_: Exception) {
@@ -165,7 +166,7 @@ class NativeBridge(private val a: MainActivity) {
         if (!ign && ask) {
             a.runOnUiThread {
                 try {
-                    a.startActivity(
+                    a.startPortrait(
                         Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + a.packageName))
                     )
                 } catch (_: Exception) {
@@ -187,7 +188,38 @@ class NativeBridge(private val a: MainActivity) {
             try {
                 val i = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 i.putExtra(Settings.EXTRA_APP_PACKAGE, a.packageName)
-                a.startActivity(i)
+                a.startPortrait(i)
+            } catch (_: Exception) {
+            }
+        }
+        return ok()
+    }
+
+    // ===== تشخيص اللوح =====
+    @JavascriptInterface fun diagDevices(): String = try { a.diag.devices() } catch (e: Exception) { err(e) }
+    @JavascriptInterface fun diagEvents(on: Boolean): String { a.diag.evOn = on; return ok() }
+    @JavascriptInterface fun diagEvPoll(): String = try { a.diag.evPoll() } catch (e: Exception) { "[]" }
+    @JavascriptInterface fun usbList(): String = try { a.diag.usbList() } catch (e: Exception) { "[]" }
+    @JavascriptInterface fun usbAsk(vid: Int, pid: Int): String = try { a.diag.usbAsk(vid, pid) } catch (e: Exception) { "error:" + (e.message ?: "") }
+    @JavascriptInterface fun usbState(): String = a.diag.permState
+    @JavascriptInterface fun usbStart(vid: Int, pid: Int): String = try { a.diag.usbStart(vid, pid) } catch (e: Exception) { err(e) }
+    @JavascriptInterface fun usbPoll(): String = try { a.diag.usbPoll() } catch (e: Exception) { "[]" }
+    @JavascriptInterface fun usbStop(): String { try { a.diag.usbStop() } catch (_: Exception) {}; return ok() }
+    @JavascriptInterface fun capStart(): Boolean = try { a.diag.capStart() } catch (e: Exception) { false }
+    @JavascriptInterface fun capStop(): String { try { a.diag.capStop() } catch (_: Exception) {}; return ok() }
+
+    /** إعدادات شاومي: 'app' تفاصيل التطبيق، 'auto' التشغيل التلقائي، 'perm' النوافذ المنبثقة/الأذونات. */
+    @JavascriptInterface
+    fun miSettings(kind: String): String {
+        a.runOnUiThread {
+            try {
+                val app = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + a.packageName))
+                val i = when (kind) {
+                    "auto" -> Intent().setClassName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")
+                    "perm" -> Intent("miui.intent.action.APP_PERM_EDITOR").setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity").putExtra("extra_pkgname", a.packageName)
+                    else -> app
+                }
+                try { a.startPortrait(i) } catch (_: Exception) { a.startPortrait(app) }
             } catch (_: Exception) {
             }
         }
