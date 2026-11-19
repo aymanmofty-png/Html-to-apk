@@ -513,6 +513,7 @@ function measure(e){const W=RW(),H=RH(),ew=$('ew').getBoundingClientRect(),f1=v=
 $('calok').onclick=()=>calDone(0);$('calsk').onclick=()=>calDone(1);
 {let tm=0,lp=0;const b=$('tbn');b.onpointerdown=()=>{lp=0;tm=setTimeout(()=>{lp=1;calStart()},700)};b.onpointerup=()=>{clearTimeout(tm);if(lp)return;const t=T();if(t.on){t.on=0;fsOn(0);orient(0);b.classList.add('off');showTW();persist();return}t.on=1;PC=null;LE=null;fsOn(1);orient(1);b.classList.remove('off');persist();if(!S.tabHint){S.tabHint=1;hint('حرّك القلم فوق اللوح كالماوس؛ ارفعه وأعده لتصل لأي مكان. وبإصبعك مرّر السبورة')}if(t.ok)showTW();else calStart();showTW()}}
 ['pointerdown','pointermove','pointerup','pointercancel'].forEach(n=>window.addEventListener(n,e=>{const t=T();if(!B||!t.on||e.pointerType=='touch')return;
+ if(e.isTrusted&&window.__rawLive&&window.__rawLive()&&!window.__diagOn){e.stopImmediatePropagation();e.preventDefault();return}
  if(e.pointerType=='mouse'&&!cal){e.stopImmediatePropagation();e.preventDefault();return}
  if(cal){e.preventDefault();e.stopPropagation();const r=cr||(cr={x0:1e9,y0:1e9,x1:-1,y1:-1});r.x0=Math.min(r.x0,e.clientX);r.x1=Math.max(r.x1,e.clientX);r.y0=Math.min(r.y0,e.clientY);r.y1=Math.max(r.y1,e.clientY);if(e.type=="pointerdown")cs0=[e.clientX,e.clientY];ce0=[e.clientX,e.clientY];measure(e);return}
  e.stopImmediatePropagation();e.preventDefault();const R=t.R;if(R){if(e.clientX<R.x0){R.w+=R.x0-e.clientX;R.x0=e.clientX}else if(e.clientX>R.x0+R.w)R.w=e.clientX-R.x0;if(e.clientY<R.y0){R.h+=R.y0-e.clientY;R.y0=e.clientY}else if(e.clientY>R.y0+R.h)R.h=e.clientY-R.y0}
@@ -557,7 +558,7 @@ const cvR=r=>{if(!ROT)return r;const W=RW(),H=RH();return ROT=='A'?new DOMRect(r
 Object.defineProperty(window,'innerWidth',{configurable:true,get(){return ROT?RH():RW()}});
 Object.defineProperty(window,'innerHeight',{configurable:true,get(){return ROT?RW():RH()}});
 if(window.visualViewport){const vv=visualViewport;[['height',()=>RW()],['width',()=>RH()],['offsetTop',()=>0]].forEach(([k,f])=>{const d=gdp(vv,k);Object.defineProperty(vv,k,{configurable:true,get(){return ROT?f():d.get.call(vv)}})})}
-function updateRot(){let want=0;try{want=((B&&!bc.hidden&&T().on)||RAon())&&!SUSP}catch(e){}
+function updateRot(){let want=0;try{want=((B&&!bc.hidden&&T().on)||RAon())&&!SUSP;if(want&&window.__rawWant&&window.__rawWant()&&!RAon())want=0}catch(e){}
  let ang=screen.orientation&&screen.orientation.angle;if(ang==null)ang=window.orientation!=null?(360-window.orientation)%360:0;const land=RW()>RH();let m=null;if(want&&land){m=ang==270?'A':'B';if(T().fl)m=m=='A'?'B':'A'}
  let app=document.getElementById('app');const was=ROT;
  if(m){ROT=m;const W=RW(),H=RH();if(!app){app=document.createElement('div');app.id='app';const sc=document.body.querySelector('script');[...document.body.children].forEach(c=>{if(c.tagName!='SCRIPT'&&c!=app)app.append(c)});document.body.insertBefore(app,sc)}
@@ -3691,6 +3692,212 @@ function open(){if(D)return;window.__diagOn=1;D={i:0,res:[],cur:null};const o=ui
    st(ok?'نُسخ التقرير — الصقه في المحادثة':'اضغط على النص أدناه وانسخه يدوياً')}})}
 window.__diag={open};
 {const g1=geoPop;geoPop=function(){g1();const p=$i('pp');if(!p)return;if(p.querySelector('[data-w="rm"]')&&!p.querySelector('[data-w="dg"]')){const b=document.createElement('button');b.dataset.w='dg';b.style.fontSize='16px';b.textContent='🖊 تشخيص اللوح';p.append(b);const o=p.onclick;p.onclick=e=>{if(e.target.dataset&&e.target.dataset.w=='dg'){p.hidden=true;return open()}return o(e)}}}}
+})();
+
+/* ================= v31: قراءة اللوح الخام (USB) + إعدادات اللوح + تعلّم لوح جديد ================= */
+(function(){
+const $i=id=>document.getElementById(id),NB=()=>window.__nb,sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const HX=s=>{const o=new Array(s.length>>1);for(let i=0;i<o.length;i++)o[i]=parseInt(s.substr(i*2,2),16);return o};
+const RS=()=>{const t=T();if(!t.raw)t.raw={src:'auto',mode:'rel',k:1,an:1,pc:'n',b1:'er',b2:'undo',ph:'p'};return t.raw};
+const PROF=()=>S.tprof||(S.tprof={});
+const clamp01=v=>v<0?0:v>1?1:v;
+/* ملفات اللوح الجاهزة (حُلّلت من تقرير الجهاز الحقيقي) */
+const BUILTIN={'1386:890':{name:'Wacom One by Wacom S (CTL-472)',vid:1386,pid:890,tag:'0:',idb:2,len:10,src:'builtin',f:{x:{bit:16,bits:16,max:15200},y:{bit:32,bits:16,max:9500},p:{bit:48,bits:11,max:2047},tip:{bit:8},prox:{bit:14},b2:{bit:9},b1:{bit:10}}}};
+const TABV=[1386,9580,10429,21827];
+/* ---------- فك التقارير ---------- */
+function gv(b,f){let v=0;if(f.be){for(let i=0;i<(f.bits>>3);i++)v=v*256+(b[(f.bit>>3)+i]||0);return v}let m=1;for(let j=0;j<f.bits;j++){v+=(((b[(f.bit+j)>>3]>>((f.bit+j)&7))&1)*m);m*=2}return v}
+const gb=(b,f)=>f?((b[f.bit>>3]>>(f.bit&7))&1):0;
+function dec(P,b){if(b.length<P.len)return null;if(P.idb!=null&&b[0]!=P.idb)return{leave:1};const f=P.f,x=gv(b,f.x),y=gv(b,f.y),xm=f.x.min||0,ym=f.y.min||0;
+ let u=(x-xm)/((f.x.max-xm)||1),v=(y-ym)/((f.y.max-ym)||1);if(f.x.inv)u=1-u;if(f.y.inv)v=1-v;
+ const p=f.p?clamp01(gv(b,f.p)/f.p.max):0,prox=f.prox?gb(b,f.prox):1,tip=f.tip?gb(b,f.tip):(p>.015?1:0);
+ return{prox:!!prox,tip:!!tip,u:clamp01(u),v:clamp01(v),p,b1:gb(b,f.b1),b2:gb(b,f.b2)}}
+/* ---------- محلّل وصف HID القياسي (ألواح Huion / XP-Pen / كثير من Wacom) ---------- */
+function parseHID(hex){const b=HX(hex),reps={};let i=0;const st={up:0,lmin:0,lmax:0,rs:0,rc:0,rid:0},stack=[];let loc={us:[],umin:null,umax:null};
+ while(i<b.length){const pre=b[i++];if(pre==0xFE){i+=2+(b[i]||0);continue}const sz=[0,1,2,4][pre&3],typ=(pre>>2)&3,tag=pre>>4;let v=0;for(let j=0;j<sz;j++)v+=(b[i+j]||0)*Math.pow(2,8*j);let sv=v;if(sz&&v>=Math.pow(2,8*sz-1))sv=v-Math.pow(2,8*sz);i+=sz;
+  if(typ==1){if(tag==0)st.up=v;else if(tag==1)st.lmin=sv;else if(tag==2)st.lmax=(st.lmin<0?sv:v);else if(tag==7)st.rs=v;else if(tag==8)st.rid=v;else if(tag==9)st.rc=v;else if(tag==10)stack.push(Object.assign({},st));else if(tag==11){const s=stack.pop();if(s)Object.assign(st,s)}}
+  else if(typ==2){if(tag==0){if(sz==4)loc.us.push({up:v>>>16,u:v&0xffff});else loc.us.push({up:st.up,u:v})}else if(tag==1)loc.umin=v;else if(tag==2)loc.umax=v}
+  else if(typ==0){if(tag==8){const rep=reps[st.rid]||(reps[st.rid]={bits:0,fields:[]});let us=loc.us.slice();if(!us.length&&loc.umin!=null)for(let u=loc.umin;u<=loc.umax;u++)us.push({up:st.up,u});
+    for(let k=0;k<st.rc;k++){const u=us.length?(us[Math.min(k,us.length-1)]):null;if(!(v&1)&&u)rep.fields.push({bit:rep.bits,bits:st.rs,up:u.up,u:u.u,lmin:st.lmin,lmax:st.lmax});rep.bits+=st.rs}}
+   if(tag==8||tag==9||tag==11||tag==10||tag==12)loc={us:[],umin:null,umax:null}}}
+ const out=[];for(const rid in reps){const r=reps[rid],sh=rid>0?8:0,F=(up,u)=>r.fields.find(f=>f.up==up&&f.u==u);const X=F(1,0x30),Y=F(1,0x31);if(!X||!Y)continue;
+  const P=F(0x0d,0x30),TP=F(0x0d,0x42),PX=F(0x0d,0x32),B1=F(0x0d,0x44),B2=F(0x0d,0x5a)||F(0x0d,0x45);
+  const m=(f,o)=>f?Object.assign({bit:f.bit+sh,bits:f.bits},o):null;
+  out.push({idb:rid>0?+rid:null,len:Math.ceil(r.bits/8)+(rid>0?1:0),src:'hid',f:{x:m(X,{max:X.lmax,min:X.lmin}),y:m(Y,{max:Y.lmax,min:Y.lmin}),p:P?m(P,{max:P.lmax||((1<<P.bits)-1)}):null,tip:TP?{bit:TP.bit+sh}:null,prox:PX?{bit:PX.bit+sh}:null,b1:B1?{bit:B1.bit+sh}:null,b2:B2?{bit:B2.bit+sh}:null}})}
+ return out}
+/* ---------- خوارزمية تعلّم لوح جديد ---------- */
+const pct=(a,p)=>{if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[Math.max(0,Math.min(s.length-1,Math.floor(p*(s.length-1))))]};
+const med=a=>pct(a,.5),bl=n=>{let k=0;while(n>0){k++;n=Math.floor(n/2)}return k};
+function learn(R){ /* R: {step:[{t,b}]} */
+ const all=[];for(const s in R)R[s].forEach(r=>all.push({t:r.t,b:r.b,s}));
+ if(all.length<80)return{err:'وصلت بيانات قليلة جداً من اللوح (تأكد أن القلم قريب من السطح أثناء الخطوات)'};
+ const g={};all.forEach(r=>{const k=r.t+'/'+r.b.length;(g[k]=g[k]||[]).push(r)});let bk=null,bs=-1;
+ for(const k in g){const mv=g[k].filter(r=>r.s=='sh'||r.s=='sv');const sc=new Set(mv.map(r=>r.b.join(','))).size;if(sc>bs){bs=sc;bk=k}}
+ let G=g[bk];const len=G[0].b.length,tag=G[0].t.split(':')[0]+':';if(bs<20)return{err:'لم أجد تقارير حركة واضحة. حرّك القلم على السطح أثناء خطوتي السحب'};
+ const f0={};G.forEach(r=>f0[r.b[0]]=(f0[r.b[0]]||0)+1);const ks=Object.keys(f0).sort((a,b)=>f0[b]-f0[a]);let idb=null;if(ks.length==1){idb=+ks[0];G=G.filter(r=>r.b[0]==idb)}
+ const A=s=>G.filter(r=>r.s==s).map(r=>r.b),hasId=idb!=null,s0=hasId?1:0;
+ const C=[];for(let o=s0;o<len;o++)C.push({bit:o*8,bits:8,be:0});for(let o=s0;o<len-1;o++){C.push({bit:o*8,bits:16,be:0});C.push({bit:o*8,bits:16,be:1})}
+ const V=(c,s)=>A(s).map(b=>gv(b,c)),allv=c=>{let a=[];['TL','TR','BL','BR','sh','sv','pl','ph','hov'].forEach(s=>a=a.concat(V(c,s)));return a};
+ const rough=(c,s)=>{const v=V(c,s);if(v.length<5)return 9;let t=0;for(let i=1;i<v.length;i++)t+=Math.abs(v[i]-v[i-1]);const rg=(pct(v,.99)-pct(v,.01))||1;return t/(v.length-1)/rg*(c.be?1.05:1)};
+ const ov=(a,b)=>!(a.bit+a.bits<=b.bit||b.bit+b.bits<=a.bit);
+ function pickPos(isX,not){let best=null;C.forEach(c=>{if(not&&ov(c,not))return;const m={TL:med(V(c,'TL')),TR:med(V(c,'TR')),BL:med(V(c,'BL')),BR:med(V(c,'BR'))};
+   const av=allv(c),R2=pct(av,.995)-pct(av,.005);if(R2<(c.bits==8?100:200))return;
+   const d=isX?((m.TR+m.BR)-(m.TL+m.BL))/2:((m.BL+m.BR)-(m.TL+m.TR))/2,e=isX?(Math.abs(m.TL-m.BL)+Math.abs(m.TR-m.BR))/2:(Math.abs(m.TL-m.TR)+Math.abs(m.BL-m.BR))/2;
+   if(Math.abs(d)<.5*R2||e>.3*Math.abs(d))return;if(c.bits==16){const lo=c.be?(c.bit>>3)+1:(c.bit>>3);if(new Set(G.map(r=>r.b[lo])).size<40)return}const r=rough(c,isX?'sh':'sv')+(c.bits==8?.0005:0);if(!best||r<best.r)best={c,r,d}});return best}
+ const X=pickPos(1,null);if(!X)return{err:'لم أستطع تحديد محور X. أعد الخطوات وثبّت القلم على كل زاوية ثانيتين'};
+ const Y=pickPos(0,X.c);if(!Y)return{err:'لم أستطع تحديد محور Y. أعد الخطوات وثبّت القلم على كل زاوية ثانيتين'};
+ const fx=Object.assign({},X.c),fy=Object.assign({},Y.c);
+ [[fx,X],[fy,Y]].forEach(([f,o])=>{const av=allv(o.c);f.min=pct(av,.005);f.max=pct(av,.995);if(o.d<0)f.inv=1});
+ let Pb=null;C.forEach(c=>{if(ov(c,fx)||ov(c,fy))return;const hv=pct(V(c,'hov'),.9),pL=pct(V(c,'pl'),.9),pH=pct(V(c,'ph'),.9);
+  if(!(pH>=8&&pH>pL*1.15&&hv<=.1*pH))return;const dv=new Set(allv(c)).size*(c.be?.9:1);if(!Pb||dv>Pb.r)Pb={c,r:dv}});
+ let fp=null,pmax=0;if(Pb){const mv=pct(allv(Pb.c),.999);const bits=Pb.c.be?Pb.c.bits:Math.max(1,bl(mv));fp=Object.assign({},Pb.c,{bits});if(Pb.c.be)fp.max=Math.pow(2,bl(mv))-1;else fp.max=Math.pow(2,bits)-1;pmax=fp.max}
+ const xv=b=>gv(b,fx),yv=b=>gv(b,fy),pvv=b=>fp?gv(b,fp):0,tol=(fx.max-fx.min)*.01;
+ const idle=b=>Math.abs(xv(b)-fx.min)<=tol&&Math.abs(yv(b)-fy.min)<=tol&&pvv(b)==0,pres=b=>!idle(b);
+ const down=[].concat(A('ph'),A('pl')).filter(b=>fp?pvv(b)>.3*pmax:false),hovP=A('hov').filter(b=>pres(b)&&pvv(b)==0),idl=[].concat(A('hov'),A('TL')).filter(idle);
+ const frac=(arr,o,k)=>arr.length?arr.filter(b=>((b[o]>>k)&1)).length/arr.length:0,used=[];const inUse=(o,k)=>[fx,fy,fp].some(f=>f&&ov({bit:o*8+k,bits:1},f));
+ function bestBit(testf){let bb=null;for(let o=s0;o<len;o++)for(let k=0;k<8;k++){if(inUse(o,k)||used.some(u=>u.o==o&&u.k==k))continue;const sc=testf(o,k);if(sc!=null&&(!bb||sc>bb.sc))bb={o,k,sc}}return bb}
+ let tip=null,prox=null,b1=null,b2=null;
+ if(down.length>=3&&hovP.length>=3){const t=bestBit((o,k)=>{const pd=frac(down,o,k),ph=frac(hovP,o,k);return pd>=.9&&ph<=.1?pd-ph:null});if(t){tip={bit:t.o*8+t.k};used.push(t)}}
+ if(idl.length>=3){const pr=A('hov').concat(down).filter(pres);const t=bestBit((o,k)=>{const a=frac(pr,o,k),b=frac(idl,o,k);return a>=.9&&b<=.1?a-b:null});if(t){prox={bit:t.o*8+t.k};used.push(t)}}
+ const btnTest=(step)=>{const pr=A(step).filter(pres);if(pr.length<10)return null;const hv=hovP.length?hovP:A('hov').filter(pres);return bestBit((o,k)=>{const a=frac(pr,o,k),b=frac(hv,o,k);return a-b>=.12&&b<=.05?a-b:null})};
+ const t1=btnTest('b1');if(t1){b1={bit:t1.o*8+t1.k};used.push(t1)}const t2=btnTest('b2');if(t2){b2={bit:t2.o*8+t2.k};used.push(t2)}
+ const prof={idb,len,tag,src:'learned',f:{x:fx,y:fy,p:fp,tip,prox,b1,b2}};
+ /* تحقّق: الزوايا الأربع + مدى السحب */
+ const med2=s=>{const d=A(s).map(b=>dec(prof,b)).filter(d=>d&&!d.leave&&(d.u>0||d.v>0||d.p>0));return d.length?{u:med(d.map(z=>z.u)),v:med(d.map(z=>z.v))}:null};
+ const E={TL:[0,0],TR:[1,0],BL:[0,1],BR:[1,1]};const bad=[];
+ for(const k in E){const m=med2(k);if(!m||Math.abs(m.u-E[k][0])>.18||Math.abs(m.v-E[k][1])>.18)bad.push(k)}
+ if(bad.length)return{err:'التحقق فشل في زوايا: '+bad.map(k=>({TL:'العليا اليسرى',TR:'العليا اليمنى',BL:'السفلى اليسرى',BR:'السفلى اليمنى'})[k]).join('، ')+'. أعد التشخيص وثبّت القلم بدقة على الزاوية',prof};
+ const us=A('sh').map(b=>dec(prof,b)).filter(d=>d&&!d.leave&&d.prox).map(d=>d.u),vs=A('sv').map(b=>dec(prof,b)).filter(d=>d&&!d.leave&&d.prox).map(d=>d.v);
+ if(pct(us,.98)-pct(us,.02)<.75||pct(vs,.98)-pct(vs,.02)<.75)return{err:'مدى السحب لم يغطِّ اللوح كله. أعد خطوتي السحب من أقصى حافة إلى أقصى حافة',prof};
+ return{prof,notes:{pressure:!!fp,tip:!!tip,prox:!!prox,b1:!!b1,b2:!!b2}}}
+/* ---------- الحالة والاكتشاف ---------- */
+const ST={dev:null,prof:null,reading:false,busy:0,timer:null,status:'',down:false,present:false,lastT:0,RC:null,last:null,prev:null,b1:0,b2:0,cap:null,tap:null,noInj:0,hint:0,cnt:0,descs:null};
+const keyOf=d=>d.vid+':'+d.pid,profOf=d=>d?(PROF()[keyOf(d)]||BUILTIN[keyOf(d)]||null):null;
+const status=s=>{ST.status=s;const e=$i('tsst');if(e)e.textContent=s};
+function pickDev(l){let c=l.filter(d=>TABV.includes(d.vid));if(!c.length&&RS().pick)c=l.filter(d=>keyOf(d)==RS().pick);return c[0]||null}
+window.__rawLive=()=>ST.reading&&!!ST.prof&&!ST.noInj;
+window.__rawWant=()=>{try{return !!(NB()&&RS().src!='android'&&ST.dev&&ST.prof)}catch(e){return false}};
+async function scan(){const nb=NB();if(!nb)return;const l=nb.jr('usbList');if(!Array.isArray(l))return;ST.all=l;const d=pickDev(l);
+ if(!d){if(ST.dev){if(ST.reading)stopRaw(true);ST.dev=null;ST.prof=null;status('فُصل اللوح');}return}
+ if(!ST.dev||keyOf(ST.dev)!=keyOf(d)){ST.dev=d;ST.prof=profOf(d);ST.hint=0;if(ST.reading)stopRaw(true);status(ST.prof?'تم اكتشاف '+(ST.prof.name||d.product||'اللوح')+' (ملف جاهز)':'لوح جديد: '+(d.product||keyOf(d))+' — غير معروف بعد')}else ST.dev=d;
+ if(!ST.prof){if(!ST.hint&&B&&T().on){ST.hint=1;hint('لوح جديد غير معروف. افتح ➕ ← «إعدادات اللوح» ← «تعلّم لوحاً جديداً»')}return}
+ if(B&&T().on&&RS().src!='android'&&!ST.reading&&!ST.busy&&!ST.failed)startRaw()}
+async function startRaw(learnMode){const nb=NB();if(!nb||ST.busy||ST.reading||!ST.dev)return false;ST.busy=1;const d=ST.dev;
+ try{let a=nb.s('usbAsk',d.vid,d.pid);if(a!='granted'){status('اسمح بإذن USB في النافذة…');for(let i=0;i<60;i++){await sleep(500);const s=nb.s('usbState');if(s=='granted'||s=='denied')break}a=nb.s('usbState')}
+  if(a!='granted'){status('لم يُمنح إذن USB — يعمل اللوح بالطريقة العادية');ST.failed=1;ST.busy=0;return false}
+  const r=nb.jr('usbStart',d.vid,d.pid);if(!r||r.error){status('تعذر فتح اللوح: '+((r&&r.error)||'')+' — يعمل بالطريقة العادية');ST.failed=1;ST.busy=0;return false}
+  ST.descs=r.descs||[];ST.reading=true;ST.busy=0;ST.noInj=!!learnMode;ST.timer=setInterval(pollRaw,8);status(learnMode?'قراءة اللوح للتعلّم…':'القراءة الخام تعمل ✔');return true}
+ catch(e){status('خطأ: '+e);ST.busy=0;return false}}
+function stopRaw(quiet){clearInterval(ST.timer);ST.timer=null;try{NB()&&NB().s('usbStop')}catch(e){}ST.reading=false;release();if(!quiet)status('تم إيقاف القراءة الخام — أعد توصيل اللوح ليعود للنظام')}
+function pollRaw(){const nb=NB();if(!nb)return;const a=nb.jr('usbPoll');if(!a||!a.length)return;
+ for(const l of a){const k=l.indexOf('|'),tg=l.slice(0,k),b=HX(l.slice(k+1));if(ST.tap)ST.tap(tg,b);if(ST.noInj||!ST.prof)continue;if(tg.indexOf(ST.prof.tag)!=0)continue;ST.cnt++;onRep(b)}}
+/* ---------- الربط بالسبورة ---------- */
+const rotq=(u,v,q)=>q==1?[v,1-u]:q==2?[1-u,1-v]:q==3?[1-v,u]:[u,v];
+function mapPt(P,u,v,contact,now){const R=RS(),q=Q(),[a,b]=rotq(u,v,q),xr=(P.f.x.max-(P.f.x.min||0))||1,yr=(P.f.y.max-(P.f.y.min||0))||1,tw=q%2?yr:xr,th=q%2?xr:yr,W=innerWidth,H=innerHeight;
+ try{const t=T();if(Math.abs((t.asp||0)-tw/th)>.002)t.asp=tw/th}catch(e){}
+ if(R.mode=='stretch')return[a*(W-1),b*(H-1)];
+ if(R.mode=='fill'||R.mode=='contain'){const an=[0,.5,1][R.an==null?1:R.an];if(R.mode=='fill'){const s=Math.max(W/tw,H/th),ew=W/s,eh=H/s,ox=(tw-ew)*an,oy=(th-eh)*an;return[Math.max(0,Math.min(W-1,(a*tw-ox)*s)),Math.max(0,Math.min(H-1,(b*th-oy)*s))]}
+  const s=Math.min(W/tw,H/th),ox=(W-tw*s)*an,oy=(H-th*s)*an;return[ox+a*tw*s,oy+b*th*s]}
+ /* نسبي: كفأرة، بنافذة بنسبة اللوح (بلا تشويه) */
+ if(!ST.RC)ST.RC=[W/2,H/2];const L=ST.last;let dx=0,dy=0;if(L&&now-L.t<250){dx=a-L.a;dy=b-L.b;const Wn=twin();let g=1;if(!contact){const dt=Math.max(4,now-L.t),pv=Math.hypot(dx*Wn.w,dy*Wn.h)/dt;g=pv>2.5?Math.min(4,1+(pv-2.5)/2.5):1}
+  ST.RC=[Math.max(0,Math.min(W-1,ST.RC[0]+dx*Wn.w*(R.k||1)*g)),Math.max(0,Math.min(H-1,ST.RC[1]+dy*Wn.h*(R.k||1)*g))]}
+ ST.last={a,b,t:now};return ST.RC}
+const curve=p=>{const c=RS().pc;return c=='s'?Math.pow(p,.7):c=='h'?Math.pow(p,1.4):p};
+function emit(type,X,Y,pr,bt){const ev=new PointerEvent(type,{pointerId:77,pointerType:'pen',isPrimary:true,clientX:X,clientY:Y,pressure:pr,buttons:bt,button:type=='pointermove'?-1:0,width:1,height:1,bubbles:true,cancelable:true});
+ const m=new Proxy(ev,{get:(o,k)=>k=='target'?bc:(k=='preventDefault'||k=='stopPropagation'||k=='stopImmediatePropagation')?()=>{}:typeof o[k]=='function'?o[k].bind(o):o[k]});
+ ST.pos=[X,Y];try{ring(X,Y,m)}catch(e){}try{if(uiTap(m,X,Y))return}catch(e){}const f=bc['on'+type];if(f)try{f(m)}catch(e){}}
+function release(){if(ST.down){ST.down=false;const p=ST.pos||[0,0];try{PD=0}catch(e){}emit('pointerup',p[0],p[1],0,0)}ST.last=null;ST.present=false;btnSet(1,0);btnSet(2,0)}
+function btnSet(n,on){if(!!on==!!ST['b'+n])return;ST['b'+n]=on?1:0;const act=RS()['b'+n];if(!B)return;
+ try{if(act=='er'){if(on){ST.prev=B.tool;tool('er',1)}else tool(ST.prev&&ST.prev!='er'?ST.prev:'pen',1)}
+  else if(act=='tg'){if(on){if(B.tool=='er')tool(ST.prev&&ST.prev!='er'?ST.prev:'pen',1);else{ST.prev=B.tool;tool('er',1)}}}
+  else if(act=='undo'){if(on)undo(1)}else if(act=='redo'){if(on)undo(0)}}catch(e){}}
+function onRep(b){const P=ST.prof,d=dec(P,b),now=performance.now();if(!d||d.leave||!d.prox){if(ST.present||ST.down)release();return}
+ if(ST.cap){ST.cap(d,b);return}if(!B||!T().on)return;
+ ST.lastT=now;ST.present=true;btnSet(1,d.b1);btnSet(2,d.b2);
+ const c=!!d.tip,[X,Y]=mapPt(P,d.u,d.v,c,now),pr=Math.max(.02,curve(d.p));
+ if(c&&!ST.down){ST.down=true;try{PD=1}catch(e){}emit('pointerdown',X,Y,pr,1)}
+ else if(c)emit('pointermove',X,Y,pr,1);
+ else if(!c&&ST.down){ST.down=false;try{PD=0}catch(e){}emit('pointerup',X,Y,0,0)}
+ else if(now-(ST.hv||0)>7){ST.hv=now;emit('pointermove',X,Y,0,0)}}
+setInterval(()=>{if(ST.present&&performance.now()-ST.lastT>300)release()},100);
+bc.setPointerCapture=function(id){if(id===77)return;return Element.prototype.setPointerCapture.call(this,id)};
+bc.releasePointerCapture=function(id){if(id===77)return;return Element.prototype.releasePointerCapture.call(this,id)};
+/* ---------- ربط مع النظام القائم ---------- */
+{const o=orient;orient=function(on){if(on&&window.__rawWant()){setTimeout(updateRot,60);try{const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.ScreenOrientation;if(P){RS().ph=='a'?P.unlock():P.lock({orientation:'portrait'})}}catch(e){}return}return o.apply(this,arguments)}}
+{const f=$i('fl');if(f){const o=f.onclick;f.onclick=function(){if(window.__rawWant()){const t=T();t.adj=((t.adj|0)+2)%4;persist();hint('قُلب اتجاه اللوح 180°');return}return o&&o.apply(this,arguments)}}}
+/* ---------- واجهة: أدوات مشتركة ---------- */
+const CSS='position:fixed;inset:0;z-index:10;background:#0f172a;color:#fff;font:14px system-ui;direction:rtl;display:flex;flex-direction:column;padding:10px;gap:8px;overflow:auto';
+const BT=c=>'border:0;border-radius:10px;padding:10px 12px;background:'+(c||'#334155')+';color:#fff;font:600 14px system-ui';
+const seg=(id,opts,cur)=>'<div id="'+id+'" style="display:flex;gap:5px;flex-wrap:wrap">'+opts.map(o=>'<button data-v="'+o[0]+'" style="'+BT(o[0]==cur?'#16a34a':'#334155')+';flex:1;min-width:84px;padding:8px 6px;font-size:13px">'+o[1]+'</button>').join('')+'</div>';
+function setSeg(root,id,fn){const e=root.querySelector('#'+id);e.onclick=ev=>{const b=ev.target.closest('button');if(!b)return;e.querySelectorAll('button').forEach(x=>x.style.background=x===b?'#16a34a':'#334155');fn(b.dataset.v)}}
+const sec=t=>'<div style="font-weight:700;margin-top:6px;color:#fbbf24">'+t+'</div>';
+/* ---------- نافذة إعدادات اللوح ---------- */
+let SET=null;
+function openSet(){if(SET)return;const R=RS(),t=T(),o=document.createElement('div');SET=o;o.id='tsw';o.style.cssText=CSS;
+ const acts=[['er','ممحاة (أثناء الضغط)'],['tg','تبديل ممحاة/قلم'],['undo','تراجع'],['redo','إعادة'],['none','لا شيء']];
+ o.innerHTML='<div style="display:flex;gap:6px;align-items:center"><b style="flex:1;font-size:17px">⚙ إعدادات اللوح</b><button data-a="x" style="'+BT('#b91c1c')+'">إغلاق</button></div>'
+ +'<div id="tsst" style="font-size:12px;color:#fbbf24;min-height:16px"></div>'
+ +sec('اتجاه اللوح (كيف تضعه أمامك)')+seg('tsq',[[0,'عرضي'],[1,'طولي (١)'],[2,'عرضي مقلوب'],[3,'طولي (٢)']],((t.adj|0)%4))
+ +'<button data-a="aq" style="'+BT('#2563eb')+'">اضبط الاتجاه تلقائياً (ارسم خطاً من يسارك ليمينك)</button>'
+ +sec('طريقة الربط بالسبورة')+seg('tsm',[['rel','نسبي كالفأرة (بنسبة اللوح)'],['fill','ملء الشاشة (متناسب)'],['contain','اللوح كله (متناسب)'],['stretch','تمديد كامل']],R.mode)
+ +'<div style="font-size:12px;color:#cbd5e1">نسبي: الأقرب لما اعتدت عليه (الشاشة كلها بلا تشويه). التمديد الكامل يضغط الحروف حسب فرق الشكل.</div>'
+ +sec('حجم الكتابة (في النسبي)')+'<input id="tsk" type="range" min="0.5" max="2.5" step="0.05" value="'+(R.k||1)+'"><div id="tsv" style="font-size:12px">×'+(R.k||1)+'</div>'
+ +sec('الجزء المهمَل من اللوح (في الملء/اللوح كله)')+seg('tsa',[[0,'البداية'],[1,'الوسط'],[2,'النهاية']],R.an==null?1:R.an)
+ +sec('اتجاه الهاتف')+seg('tsp',[['p','عمودي دائماً'],['a','تلقائي (يدور)']],R.ph||'p')
+ +sec('زر القلم الأول')+seg('tsb1',acts,R.b1)+sec('زر القلم الثاني')+seg('tsb2',acts,R.b2)
+ +sec('حساسية الضغط')+seg('tspc',[['s','ناعم'],['n','عادي'],['h','قاسٍ']],R.pc||'n')
+ +sec('مصدر القراءة')+seg('tssrc',[['auto','خام عند الإمكان'],['android','أندرويد فقط (القديم)']],R.src)
+ +'<div id="tsdev" style="font-size:12px;color:#cbd5e1"></div>'
+ +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button data-a="learn" style="'+BT('#16a34a')+';flex:1">تعلّم لوحاً جديداً / أعد التشخيص</button><button data-a="del" style="'+BT()+';flex:1">حذف ملف اللوح المحفوظ</button><button data-a="stop" style="'+BT()+';flex:1">إيقاف القراءة الخام</button><button data-a="dg" style="'+BT()+';flex:1">تقرير التشخيص</button></div>';
+ (APP()).append(o);
+ const dv=()=>{const e=$i('tsdev');if(!e)return;const l=ST.all||[];e.textContent='أجهزة USB: '+(l.length?l.map(d=>(d.product||'?')+' ['+keyOf(d)+']'+(ST.dev&&keyOf(d)==keyOf(ST.dev)?' ✔':'')).join(' | '):'لا يوجد')+(ST.prof?'\nالملف: '+(ST.prof.name||ST.prof.src):'')};dv();status(ST.status||'—');
+ setSeg(o,'tsq',v=>{t.adj=+v;t.R=null;persist()});setSeg(o,'tsm',v=>{R.mode=v;persist()});setSeg(o,'tsa',v=>{R.an=+v;persist()});setSeg(o,'tsp',v=>{R.ph=v;persist();try{const P=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.ScreenOrientation;if(P&&window.__rawWant())v=='a'?P.unlock():P.lock({orientation:'portrait'})}catch(e){}});
+ setSeg(o,'tsb1',v=>{R.b1=v;persist()});setSeg(o,'tsb2',v=>{R.b2=v;persist()});setSeg(o,'tspc',v=>{R.pc=v;persist()});setSeg(o,'tssrc',v=>{R.src=v;persist();ST.failed=0});
+ const k=o.querySelector('#tsk');k.oninput=()=>{R.k=+k.value;$i('tsv').textContent='×'+R.k};k.onchange=()=>persist();
+ o.addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
+  if(a=='x'){o.remove();SET=null;return}
+  if(a=='aq'){o.style.display='none';orientWiz().then(()=>{o.style.display='flex';const qq=((T().adj|0)%4);o.querySelectorAll('#tsq button').forEach(x=>x.style.background=(+x.dataset.v==qq)?'#16a34a':'#334155')});return}
+  if(a=='learn'){o.style.display='none';learnWiz().then(()=>{o.style.display='flex';dv()});return}
+  if(a=='del'){if(ST.dev){delete PROF()[keyOf(ST.dev)];ST.prof=profOf(ST.dev);persist();status(ST.prof?'عاد الملف الجاهز':'حُذف الملف — اللوح غير معروف الآن')}return}
+  if(a=='stop'){stopRaw();return}
+  if(a=='dg'){o.remove();SET=null;window.__diag&&window.__diag.open();return}});
+ const iv=setInterval(()=>{if(!SET){clearInterval(iv);return}dv()},1500)}
+/* ---------- معالج ضبط الاتجاه تلقائياً ---------- */
+async function orientWiz(){const o=document.createElement('div');o.style.cssText=CSS;o.innerHTML='<b style="font-size:17px">ضبط الاتجاه</b><div style="font-size:15px;line-height:1.7">ضع اللوح كما ستكتب عليه، ثم <b>ارسم بالقلم خطاً طويلاً من يسارك إلى يمينك</b> (كما تراه أنت). ثم ارفع القلم.</div><div id="owm" style="color:#fbbf24;min-height:20px"></div><div style="display:flex;gap:6px"><button data-a="c" style="'+BT('#b91c1c')+';flex:1">إلغاء</button></div>';APP().append(o);
+ if(!ST.dev||!ST.prof){o.querySelector('#owm').textContent='لا يوجد لوح معروف متصل.';await sleep(1800);o.remove();return}
+ if(!ST.reading){const ok=await startRaw();if(!ok){o.querySelector('#owm').textContent=ST.status;await sleep(2500);o.remove();return}}
+ let p0=null,p1=null,n=0,done=false;const q=await new Promise(res=>{o.querySelector('[data-a=c]').onclick=()=>res(-1);
+  ST.cap=(d)=>{if(d.tip){if(!p0)p0=[d.u,d.v];p1=[d.u,d.v];n++;o.querySelector('#owm').textContent='رسمتَ '+n+' نقطة…'}else if(p0&&n>8){res(0.5)}}});
+ ST.cap=null;if(q==0.5){const du=p1[0]-p0[0],dv=p1[1]-p0[1],O=[[du,dv],[dv,-du],[-du,-dv],[-dv,du]];let bq=0;O.forEach((v,i)=>{if(v[0]>O[bq][0])bq=i});T().adj=bq;T().R=null;persist();hint('تم ضبط الاتجاه ('+['عرضي','طولي ١','عرضي مقلوب','طولي ٢'][bq]+')')}
+ o.remove()}
+/* ---------- معالج تعلّم لوح جديد ---------- */
+const WZ=[['hov','حرّك القلم فوق اللوح دون لمس (حلّق) في كل المساحة',4],['TL','ضع رأس القلم على الزاوية العليا اليسرى واضغط قليلاً وثبّته',3],['TR','الزاوية العليا اليمنى: اضغط قليلاً وثبّت',3],['BL','الزاوية السفلى اليسرى: اضغط قليلاً وثبّت',3],['BR','الزاوية السفلى اليمنى: اضغط قليلاً وثبّت',3],
+ ['sh','اسحب القلم ملامساً من أقصى اليسار إلى أقصى اليمين عدة مرات',5],['sv','اسحب القلم ملامساً من أعلى اللوح إلى أسفله عدة مرات',5],['pl','اضغط ضغطاً خفيفاً جداً وثبّت',3],['ph','اضغط بأقصى قوة وثبّت',3],['b1','اضغط الزر الأول بالقلم وأنت تحلّق ثم المس اللوح (اضغط «تخطي» إن لم يكن للقلم أزرار)',6,1],['b2','الزر الثاني: نفس الشيء (أو «تخطي»)',6,1]];
+async function learnWiz(){const o=document.createElement('div');o.style.cssText=CSS;o.innerHTML='<b style="font-size:17px">تعلّم لوح جديد</b><div style="font-size:13px;color:#cbd5e1">ضع اللوح بوضعه الأصلي الأفقي أمامك. اتبع كل خطوة ثم اضغط «ابدأ». أثناء التعلّم لن يحرّك القلم المؤشر على الشاشة (هذا طبيعي).</div><div id="lwm" style="font-size:15px;min-height:60px;line-height:1.6"></div><div id="lws" style="color:#fbbf24;min-height:20px"></div><div style="display:flex;gap:6px"><button data-a="go" style="'+BT('#16a34a')+';flex:2">ابدأ</button><button data-a="sk" style="'+BT()+';flex:1">تخطي</button><button data-a="c" style="'+BT('#b91c1c')+';flex:1">إلغاء</button></div>';APP().append(o);
+ const M=o.querySelector('#lwm'),Sx=o.querySelector('#lws');let cancel=0;o.querySelector('[data-a=c]').onclick=()=>{cancel=1;wake&&wake('c')};let wake=null;
+ const click=()=>new Promise(r=>{wake=r;o.querySelector('[data-a=go]').onclick=()=>r('go');o.querySelector('[data-a=sk]').onclick=()=>r('sk')});
+ if(!ST.dev){const l=NB()?(NB().jr('usbList')||[]):[];if(!l.length){M.textContent='لا يوجد جهاز USB متصل. وصّل اللوح بالـOTG أولاً.';await sleep(2500);o.remove();return}ST.dev=l.find(d=>d.ifs.some(i=>i.cls==3&&d.vid!=0))||l[0];ST.all=l;RS().pick=keyOf(ST.dev)}
+ if(ST.reading)stopRaw(true);ST.failed=0;
+ M.textContent='جارٍ فتح اللوح…';const ok=await startRaw(true);if(!ok){Sx.textContent=ST.status;await sleep(2500);o.remove();return}
+ const R={};let hidP=null;try{for(const d of ST.descs||[]){const ps=parseHID(d.hex);for(const p of ps)if(p.f.x&&p.f.y&&(!hidP||p.f.p))hidP=Object.assign(p,{tag:d.iface+':'})}}catch(e){}
+ const steps=hidP?WZ.filter(s=>['TL','TR','BL','BR'].includes(s[0])):WZ;
+ if(hidP)Sx.textContent='تعرّفتُ على وصف اللوح تلقائياً؛ سنتحقق منه بأربع زوايا فقط.';
+ let cur=null;ST.tap=(tg,b)=>{if(cur)(R[cur]=R[cur]||[]).push({t:tg,b})};
+ for(let i=0;i<steps.length&&!cancel;i++){const[k,txt,sec_,opt]=steps[i];M.textContent='الخطوة '+(i+1)+'/'+steps.length+': '+txt;const r=await click();if(r=='c'||cancel)break;if(r=='sk'){continue}
+  cur=k;R[k]=[];for(let s=sec_;s>0&&!cancel;s--){Sx.textContent='يسجّل… '+s;await sleep(1000)}cur=null;Sx.textContent='سُجّل '+(R[k]||[]).length+' تقريراً'}
+ ST.tap=null;stopRaw(true);
+ if(cancel){o.remove();return}
+ let res;if(hidP){const rs={};for(const k in R)rs[k]=R[k];const prof=Object.assign({},hidP);const E={TL:[0,0],TR:[1,0],BL:[0,1],BR:[1,1]};let bad=0;
+  for(const k in E){const dd=(rs[k]||[]).filter(r=>r.t.indexOf(prof.tag)==0).map(r=>dec(prof,r.b)).filter(d=>d&&!d.leave&&d.prox);if(dd.length<5){bad=1;break}const mu=med(dd.map(d=>d.u)),mv=med(dd.map(d=>d.v));if(Math.abs(mu-E[k][0])>.18||Math.abs(mv-E[k][1])>.18)bad=1}
+  res=bad?{err:'الوصف القياسي لم يتحقق على لوحك. سنجرّب التعلّم الكامل — أعد المعالج واختر الخطوات كلها'}:{prof}}
+ else res=learn(R);
+ if(res.err){M.textContent='⚠ '+res.err;Sx.textContent='يمكنك إعادة التشخيص، أو إرسال «تقرير التشخيص» لي لأضيف دعم هذا اللوح.';o.querySelector('[data-a=go]').textContent='إغلاق';o.querySelector('[data-a=sk]').remove();o.querySelector('[data-a=go]').onclick=()=>{o.remove()};if(hidP&&!res.prof){/* fallthrough */}await new Promise(r=>{o.querySelector('[data-a=c]').onclick=()=>{o.remove();r()};o.querySelector('[data-a=go]').onclick=()=>{o.remove();r()}});return}
+ const prof=res.prof;prof.name=(ST.dev.product||'لوح')+' ('+(prof.src=='hid'?'من الوصف القياسي':'تعلّمته')+')';prof.vid=ST.dev.vid;prof.pid=ST.dev.pid;PROF()[keyOf(ST.dev)]=prof;ST.prof=prof;persist();
+ const n=res.notes||{};M.innerHTML='✔ تم تعلّم اللوح وحُفظ.<br>الضغط: '+(n.pressure===false?'غير موجود':'نعم')+' | أزرار القلم: '+((n.b1?1:0)+(n.b2?1:0)||'لم تُكتشف');Sx.textContent='سيُستعمل تلقائياً كلما وُصل هذا اللوح.';
+ o.querySelector('[data-a=sk]').remove();o.querySelector('[data-a=go]').textContent='تم';await new Promise(r=>{o.querySelector('[data-a=go]').onclick=()=>{o.remove();r()};o.querySelector('[data-a=c]').onclick=()=>{o.remove();r()}});ST.failed=0}
+/* ---------- قائمة ➕ ---------- */
+{const g1=geoPop;geoPop=function(){g1();const p=$i('pp');if(!p)return;if(p.querySelector('[data-w="rm"]')&&!p.querySelector('[data-w="ts"]')){const b=document.createElement('button');b.dataset.w='ts';b.style.fontSize='16px';b.textContent='⚙ إعدادات اللوح';p.append(b);const o=p.onclick;p.onclick=e=>{if(e.target.dataset&&e.target.dataset.w=='ts'){p.hidden=true;return openSet()}return o(e)}}}}
+window.__tab={open:openSet,ST,learn,parseHID,dec,BUILTIN,onRep,scan,mapPt,startRaw,stopRaw,pollRaw};
+setInterval(()=>{try{scan()}catch(e){}},1500);
 })();
 
 </script></body></html>
