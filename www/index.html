@@ -3753,27 +3753,39 @@ window.__rawLive=()=>ST.reading&&!!ST.prof&&!ST.noInj;
 window.__rawBlock=()=>{try{return !!(RS().src!='android'&&ST.dev)}catch(e){return false}};
 window.__rawWant=()=>{try{return !!(NB()&&RS().src!='android'&&ST.dev&&ST.prof&&!ST.failed)}catch(e){return false}};
 const reori=()=>{};
-function tabOn(v){const t=T(),b=$i('tbn');if(v&&!t.on){t.on=1;PC=null;LE=null;try{fsOn(1)}catch(e){}orient(1);b&&b.classList.remove('off');persist();try{showTW()}catch(e){}}else if(!v&&t.on){t.on=0;try{fsOn(0)}catch(e){}orient(0);b&&b.classList.add('off');persist();stopRaw(true);try{showTW()}catch(e){}}}
-async function scan(){const nb=NB();if(!nb)return;const l=nb.jr('usbList');if(!Array.isArray(l))return;ST.all=l;const d=pickDev(l);
+const ENG=()=>{try{return RS().eng!=='old'}catch(e){return true}};
+const ENGST={idle:'متوقف',none:'اللوح غير موجود',wait:'مهلة قبل الفتح',noperm:'بانتظار إذن USB',reading:'يقرأ ✔',dead:'أُغلق وسيُعاد',gaveup:'توقف — أعد وصل الكابل'};
+function engSync(nb){let L=[];try{L=JSON.parse(nb.s('engLog')||'[]')}catch(e){L=[]}L.forEach(m=>lg('المحرك: '+m));let st=null;try{st=nb.jr('usbStatus')}catch(e){}if(!st)return;ST.es=st;
+ if(ST.reading){if(st.state!='reading'){ST.reading=false;clearInterval(ST.timer);ST.timer=null;release();ST.failed=0;lg('انقطعت القراءة ('+(ENGST[st.state]||st.state)+') — المحرك يعيد المحاولة')}else if(st.sess!=ST.sess){ST.sess=st.sess;try{ST.descs=JSON.parse(nb.s('engDescs')||'[]')}catch(e){}ST.devName=ST.dev&&ST.dev.name;ST.rsT=performance.now();lg('أُعيد فتح القراءة تلقائياً (جلسة '+st.sess+')')}}
+ if(st.state=='noperm'&&st.denied&&!ST.permHint){ST.permHint=1;hint('اللوح بحاجة إلى إذن USB — افتح إعدادات اللوح واضغط «اطلب إذن USB»')}if(st.state=='reading')ST.permHint=0}
+function tabOn(v){const t=T(),b=$i('tbn');if(v&&!t.on){t.on=1;PC=null;LE=null;try{fsOn(1)}catch(e){}orient(1);b&&b.classList.remove('off');persist();try{showTW()}catch(e){}}else if(!v&&t.on){t.on=0;try{fsOn(0)}catch(e){}orient(0);b&&b.classList.add('off');persist();try{showTW()}catch(e){}}}
+async function scan(){const nb=NB();if(!nb||window.__diagOn)return;const l=nb.jr('usbList');if(!Array.isArray(l))return;ST.all=l;const d=pickDev(l);
  if(!d){if(ST.dev&&++ST.miss>=2){if(ST.reading)stopRaw(true);ST.dev=null;ST.prof=null;ST.failed=0;ST.denied=0;ST.failN=0;status('فُصل اللوح');}return}ST.miss=0;
  if(!ST.dev||keyOf(ST.dev)!=keyOf(d)){ST.dev=d;ST.prof=profOf(d);ST.hint=0;ST.failed=0;ST.denied=0;ST.failN=0;if(ST.reading)stopRaw(true);status(ST.prof?'تم اكتشاف '+(ST.prof.name||d.product||'اللوح')+' (ملف جاهز)':'لوح جديد: '+(d.product||keyOf(d))+' — غير معروف بعد')}else ST.dev=d;
  if(!ST.prof){if(!ST.hint&&B&&T().on){ST.hint=1;hint('لوح جديد غير معروف. افتح ➕ ← «إعدادات اللوح» ← «تعلّم لوحاً جديداً»')}return}
 
  if(RS().src=='android'){if(ST.reading){stopRaw(true);lg('تحويل إلى قراءة أندرويد (يدوي) — أعد توصيل اللوح')}return}
- if(ST.reading&&ST.devName&&d.name&&d.name!=ST.devName){lg('تغيّر اسم الجهاز: أعيد فتح القراءة');stopRaw(true);ST.failed=0}
- if(ST.reading){let bk=0;try{bk=+nb.s('rawBlocked')||0}catch(e){}const nw=performance.now();if(bk>(ST.bk0||0)&&nw-(ST.repT||0)>2500&&nw-(ST.rsT||0)>2500){lg('أحداث أندرويد تُحجب والتقارير صامتة: أعيد فتح القراءة');stopRaw(true);ST.failed=0}ST.bk0=bk}
+ if(ENG())engSync(nb);
+ if(!ENG()&&ST.reading&&ST.devName&&d.name&&d.name!=ST.devName){restartRaw('تغيّر اسم الجهاز')}
+ if(ST.reading){let bk=0;try{bk=+nb.s('rawBlocked')||0}catch(e){}const nw=performance.now();if(bk>(ST.bk0||0)&&nw-(ST.repT||0)>2500&&nw-(ST.rsT||0)>2500){restartRaw('أحداث أندرويد تُحجب والتقارير صامتة')}ST.bk0=bk}
  if(B&&ST.rtB!==B){ST.rtB=B;if(ST.failed&&!ST.denied){ST.failed=0;ST.failN=0;lg('سبورة جديدة: أعيد المحاولة')}}
  if(ST.failed&&!ST.denied&&(ST.failN||0)<4&&performance.now()-(ST.failAt||0)>6000){ST.failed=0;lg('إعادة محاولة تلقائية #'+((ST.failN||0)+1))}
  if(B&&!T().on&&RS().auto!==false&&RS().src!='android'&&!ST.failed&&ST.autoB!==B){ST.autoB=B;tabOn(1)}
  if(!ST.reading&&!ST.busy&&!ST.failed)startRaw()}
 async function startRaw(learnMode){const nb=NB();if(!nb||ST.busy||ST.reading||!ST.dev)return false;ST.busy=1;const d=ST.dev;
- try{let a=nb.s('usbAsk',d.vid,d.pid);if(a!='granted'){status('اسمح بإذن USB في النافذة…');for(let i=0;i<60;i++){await sleep(500);const s=nb.s('usbState');if(s=='granted'||s=='denied')break}a=nb.s('usbState')}
-  if(a!='granted'){status('لم يُمنح إذن USB — اللوح معطّل (الإصبع فقط). اسمح بالإذن ثم اضغط «ابدأ القراءة الخام الآن»');ST.failed=1;ST.denied=1;ST.failAt=performance.now();ST.busy=0;return false}
-  const r=nb.jr('usbStart',d.vid,d.pid);if(!r||r.error){status('تعذر فتح اللوح: '+((r&&r.error)||'')+' — اللوح معطّل (الإصبع فقط). جرّب «ابدأ القراءة الخام الآن» أو أعد توصيل اللوح');ST.failed=1;ST.failAt=performance.now();ST.failN=(ST.failN||0)+1;ST.busy=0;return false}
-  ST.descs=r.descs||[];ST.devName=d.name;ST.rsT=performance.now();ST.reading=true;ST.busy=0;ST.noInj=!!learnMode;ST.failed=0;ST.denied=0;ST.failN=0;ST.timer=setInterval(pollRaw,8);status(learnMode?'قراءة اللوح للتعلّم…':'القراءة الخام تعمل ✔');return true}
+ try{let r;
+  if(ENG()){nb.s('usbWatch',d.vid,d.pid);let st={};for(let i=0;i<60;i++){st=nb.jr('usbStatus')||{};ST.es=st;if(st.state=='reading')break;if(st.state=='gaveup'||(st.state=='noperm'&&st.denied))break;if(i==2&&st.state=='noperm')status('اسمح بإذن USB في النافذة…');await sleep(500)}
+   if(st.state!='reading'){const dn=st.state=='noperm';status(dn?'لم يُمنح إذن USB — اضغط «اطلب إذن USB» في إعدادات اللوح (الإصبع يعمل الآن)':st.state=='gaveup'?'اللوح لا يستجيب — أعد وصل الكابل (الإصبع يعمل الآن)':'تعذر فتح اللوح ('+(ENGST[st.state]||st.state)+') — سيُعاد تلقائياً');ST.failed=1;ST.denied=dn?1:0;ST.failAt=performance.now();if(!dn)ST.failN=(ST.failN||0)+1;ST.busy=0;return false}
+   ST.sess=st.sess;try{r={descs:JSON.parse(nb.s('engDescs')||'[]')}}catch(e){r={descs:[]}}}
+  else{let a=nb.s('usbAsk',d.vid,d.pid);if(a!='granted'){status('اسمح بإذن USB في النافذة…');for(let i=0;i<60;i++){await sleep(500);const s=nb.s('usbState');if(s=='granted'||s=='denied')break}a=nb.s('usbState')}
+   if(a!='granted'){status('لم يُمنح إذن USB — اللوح معطّل (الإصبع فقط). اسمح بالإذن ثم اضغط «ابدأ القراءة الخام الآن»');ST.failed=1;ST.denied=1;ST.failAt=performance.now();ST.busy=0;return false}
+   r=nb.jr('usbStart',d.vid,d.pid);for(let k=0;k<4&&r&&r.error=='wait';k++){await sleep((r.ms||1500)+150);r=nb.jr('usbStart',d.vid,d.pid)}
+   if(!r||r.error){status('تعذر فتح اللوح: '+((r&&r.error)||'')+' — اللوح معطّل (الإصبع فقط). جرّب «ابدأ القراءة الخام الآن» أو أعد توصيل اللوح');ST.failed=1;ST.failAt=performance.now();ST.failN=(ST.failN||0)+1;ST.busy=0;return false}}
+  clearInterval(ST.timer);ST.descs=r.descs||[];ST.devName=d.name;ST.rsT=performance.now();ST.reading=true;ST.busy=0;ST.noInj=!!learnMode;ST.failed=0;ST.denied=0;ST.failN=0;ST.timer=setInterval(pollRaw,8);ST.n0=ST.nrep||0;setTimeout(()=>{if(!ST.reading)return;let sx={};try{sx=nb.jr('usbStats')||{}}catch(e){}const got=(ST.nrep||0)-ST.n0;lg('بعد ٣ ثوانٍ: '+(sx.reads||0)+' تقرير وصل، '+(sx.fails||0)+' قراءة فارغة، '+(sx.claim||''));if(!sx.reads&&!got)lg('لا تقارير بعد: حرّك القلم فوق اللوح؛ إن بقي صامتاً يعيد المحرك المحاولة وحده')},3000);status(learnMode?'قراءة اللوح للتعلّم…':'القراءة الخام تعمل ✔');return true}
  catch(e){status('خطأ: '+e);ST.busy=0;ST.failed=1;ST.failAt=performance.now();ST.failN=(ST.failN||0)+1;return false}}
-function stopRaw(quiet){clearInterval(ST.timer);ST.timer=null;try{NB()&&NB().s('usbStop')}catch(e){}ST.reading=false;release();if(!quiet){ST.failed=1;ST.denied=1;status('تم إيقاف القراءة الخام — أعد توصيل اللوح ليعود للنظام')}}
-function pollRaw(){const nb=NB();if(!nb)return;const a=nb.jr('usbPoll');if(!a||!a.length)return;
+async function restartRaw(why){if(ENG()){lg(why+' — طلب إعادة فتح من المحرك');try{NB().s('usbKick')}catch(e){}ST.rsT=performance.now();return}if(ST.rsBusy)return;ST.rsBusy=1;try{lg(why+' — إعادة فتح القراءة بعد مهلة');stopRaw(true);await sleep(2000);ST.failed=0;await startRaw()}finally{ST.rsBusy=0}}
+function stopRaw(quiet){clearInterval(ST.timer);ST.timer=null;try{if(NB()){if(ENG())NB().s('usbWatch',0,0);else NB().s('usbStop')}}catch(e){}ST.reading=false;release();if(!quiet){ST.failed=1;ST.denied=1;status('تم إيقاف القراءة الخام — أعد توصيل اللوح ليعود للنظام')}}
+function pollRaw(){const nb=NB();if(!nb)return;const a=nb.jr('usbPoll');if(!a||!a.length)return;ST.nrep=(ST.nrep||0)+a.length;
  for(const l of a){const k=l.indexOf('|'),tg=l.slice(0,k),b=HX(l.slice(k+1));if(ST.tap)ST.tap(tg,b);if(ST.noInj||!ST.prof)continue;if(tg.indexOf(ST.prof.tag)!=0)continue;ST.cnt++;ST.repT=performance.now();onRep(b)}}
 /* ---------- الربط بالسبورة ---------- */
 const rotq=(u,v,q)=>q==1?[v,1-u]:q==2?[1-u,1-v]:q==3?[1-v,u]:[u,v];
@@ -3800,6 +3812,7 @@ function onRep(b){const P=ST.prof,d=dec(P,b),now=performance.now();if(d&&!d.leav
  if(ST.cap){ST.cap(d,b);return}
  ST.lastT=now;ST.present=true;btnSet(1,d.b1);btnSet(2,d.b2);
  const c=!!d.tip,[X,Y]=mapPt(P,d.u,d.v,c,now),pr=Math.max(.02,curve(d.p));
+ if(B&&!T().on&&RS().wr!==false&&RS().src!='android'){lg('تفعيل الكتابة على السبورة تلقائياً');tabOn(1)}
  if(!B||!T().on){if(ST.down){ST.down=false;emit('pointerup',X,Y,0,0)}return pmode(c,X,Y)}
  if(ST.pm)pmEnd(X,Y);
  if(c&&!ST.down){ST.down=true;try{PD=1}catch(e){}emit('pointerdown',X,Y,pr,1)}
@@ -3843,22 +3856,24 @@ function openSet(){if(SET)return;const R=RS(),t=T(),o=document.createElement('di
  +sec('اتجاه الهاتف')+seg('tsp',[['p','عمودي دائماً'],['a','تلقائي (يدور)']],R.ph||'p')
  +sec('زر القلم الأول')+seg('tsb1',acts,R.b1)+sec('زر القلم الثاني')+seg('tsb2',acts,R.b2)
  +sec('حساسية الضغط')+seg('tspc',[['s','ناعم'],['n','عادي'],['h','قاسٍ']],R.pc||'n')
+ +sec('إذن USB والمحرك')+'<div style="display:flex;gap:6px"><button data-a="perm" style="'+BT('#2563eb')+';flex:1">اطلب إذن USB / أعد المحاولة</button></div>'+'<div id="tseh" style="font-size:12px;color:#cbd5e1;white-space:pre-line"></div>'+seg('tseng',[['new','المحرك الجديد (تلقائي)'],['old','المحرك القديم']],R.eng==='old'?'old':'new')
  +sec('مصدر القراءة')+seg('tssrc',[['auto','خام فقط (الأفضل)'],['android','أندرويد (يدوي إن فشل الخام)']],R.src)
  +'<div id="tsdev" style="font-size:12px;color:#cbd5e1"></div>'
  +sec('سجل الأحداث')+'<pre id="tslg" style="margin:0;background:#0b1220;border-radius:8px;padding:8px;font:11px/1.5 ui-monospace,monospace;direction:rtl;white-space:pre-wrap;max-height:160px;overflow:auto"></pre><button data-a="cplg" style="'+BT()+'">نسخ السجل</button>'
  +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button data-a="learn" style="'+BT('#16a34a')+';flex:1">تعلّم لوحاً جديداً / أعد التشخيص</button><button data-a="del" style="'+BT()+';flex:1">حذف ملف اللوح المحفوظ</button><button data-a="stop" style="'+BT()+';flex:1">إيقاف القراءة الخام</button><button data-a="dg" style="'+BT()+';flex:1">تقرير التشخيص</button></div>';
  (APP()).append(o);
- const upd=()=>{const lgE=$i('tslg');if(lgE){const tx=LG.join('\n');if(lgE.textContent!==tx){lgE.textContent=tx;lgE.scrollTop=1e9}}const g=$i('tstg');if(g){const on=!!T().on;g.textContent=on?'✍ وضع اللوح: مفعّل — اضغط للإيقاف':'✍ وضع اللوح: متوقف — اضغط للتشغيل';g.style.background=on?'#16a34a':'#b45309'}const L=ST.live,d=$i('tsdt'),x=$i('tstx');if(!x)return;if(!ST.reading){x.textContent='القراءة الخام غير شغّالة'+(ST.dev?'':' (لا لوح متصل)');if(d)d.style.background='#64748b';return}if(!L||performance.now()-L.t>500){x.textContent=ST.cnt||L?'القلم خارج نطاق اللوح (أو لا تقارير الآن)':'لا بيانات بعد — حرّك القلم فوق اللوح';if(d)d.style.background='#64748b';return}if(d){d.style.left=(L.u*100)+'%';d.style.top=(L.v*100)+'%';d.style.background=L.tip?'#22c55e':'#fbbf24'}let bk='';try{bk=NB()&&NB().s('rawBlocked')}catch(e){}x.textContent='x '+L.u.toFixed(3)+'  y '+L.v.toFixed(3)+'\nضغط '+Math.round(L.p*100)+'%  '+(L.tip?'لمس':'تحليق')+'\nزر١ '+(L.b1?'●':'○')+'  زر٢ '+(L.b2?'●':'○')+'  #'+L.n+(bk?'\nأحداث أندرويد المحجوبة: '+bk:'')};
- const dv=()=>{upd();const e=$i('tsdev');if(!e)return;const l=ST.all||[];e.textContent='أجهزة USB: '+(l.length?l.map(d=>(d.product||'?')+' ['+keyOf(d)+']'+(ST.dev&&keyOf(d)==keyOf(ST.dev)?' ✔':'')).join(' | '):'لا يوجد')+(ST.prof?'\nالملف: '+(ST.prof.name||ST.prof.src):'')};dv();status(ST.status||'—');
+ const upd=()=>{const lgE=$i('tslg');if(lgE){const tx=LG.join('\n');if(lgE.textContent!==tx){lgE.textContent=tx;lgE.scrollTop=1e9}}const g=$i('tstg');if(g){const on=RS().wr!==false;g.textContent=on?'✍ الكتابة باللوح على السبورة: مفعّلة — اضغط للإيقاف':'✍ الكتابة باللوح على السبورة: متوقفة — اضغط للتشغيل';g.style.background=on?'#16a34a':'#b45309'}const L=ST.live,d=$i('tsdt'),x=$i('tstx');if(!x)return;if(!ST.reading){x.textContent='القراءة الخام غير شغّالة'+(ST.dev?'':' (لا لوح متصل)');if(d)d.style.background='#64748b';return}if(!L||performance.now()-L.t>500){x.textContent=ST.cnt||L?'القلم خارج نطاق اللوح (أو لا تقارير الآن)':'لا بيانات بعد — حرّك القلم فوق اللوح';if(d)d.style.background='#64748b';return}if(d){d.style.left=(L.u*100)+'%';d.style.top=(L.v*100)+'%';d.style.background=L.tip?'#22c55e':'#fbbf24'}let bk='';try{bk=NB()&&NB().s('rawBlocked')}catch(e){}x.textContent='x '+L.u.toFixed(3)+'  y '+L.v.toFixed(3)+'\nضغط '+Math.round(L.p*100)+'%  '+(L.tip?'لمس':'تحليق')+'\nزر١ '+(L.b1?'●':'○')+'  زر٢ '+(L.b2?'●':'○')+'  #'+L.n+(bk?'\nأحداث أندرويد المحجوبة: '+bk:'')};
+ const dv=()=>{upd();const eh=$i('tseh');if(eh){const e=ST.es||{};eh.textContent='إذن USB: '+(ST.dev?(e.perm||ST.dev.perm?'ممنوح':'غير ممنوح'):'لا لوح')+(ENG()?'\nالمحرك: '+(ENGST[e.state]||'—')+' | جلسة '+(e.sess||0)+' | تقارير '+(e.reads||0)+' | فارغة '+(e.fails||0)+'\nآخر حدث: '+(e.why||'—'):'\nالمحرك القديم')}const e=$i('tsdev');if(!e)return;const l=ST.all||[];e.textContent='أجهزة USB: '+(l.length?l.map(d=>(d.product||'?')+' ['+keyOf(d)+']'+(ST.dev&&keyOf(d)==keyOf(ST.dev)?' ✔':'')).join(' | '):'لا يوجد')+(ST.prof?'\nالملف: '+(ST.prof.name||ST.prof.src):'')};dv();status(ST.status||'—');
  setSeg(o,'tsq',v=>{t.adj=+v;t.R=null;persist()});setSeg(o,'tsm',v=>{R.mode=v;persist()});setSeg(o,'tsa',v=>{R.an=+v;persist()});setSeg(o,'tsp',v=>{R.ph=v;persist();ori=null;phoneOri()});
- setSeg(o,'tsb1',v=>{R.b1=v;persist()});setSeg(o,'tsb2',v=>{R.b2=v;persist()});setSeg(o,'tspc',v=>{R.pc=v;persist()});setSeg(o,'tssrc',v=>{R.src=v;persist();ST.failed=0;if(v=='android'){stopRaw(true);hint('أعد توصيل اللوح (افصله ثم وصّله) ليعود أندرويد لقراءته')}else hint('سيبدأ القراءة الخام خلال ثوانٍ')});setSeg(o,'tsau',v=>{R.auto=v=='1';persist()});
+ setSeg(o,'tsb1',v=>{R.b1=v;persist()});setSeg(o,'tsb2',v=>{R.b2=v;persist()});setSeg(o,'tspc',v=>{R.pc=v;persist()});setSeg(o,'tssrc',v=>{R.src=v;persist();ST.failed=0;if(v=='android'){stopRaw(true);hint('أعد توصيل اللوح (افصله ثم وصّله) ليعود أندرويد لقراءته')}else hint('سيبدأ القراءة الخام خلال ثوانٍ')});setSeg(o,'tsau',v=>{R.auto=v=='1';persist()});setSeg(o,'tseng',v=>{const nb=NB();try{if(nb){nb.s('usbWatch',0,0);nb.s('usbStop')}}catch(e){}clearInterval(ST.timer);ST.timer=null;ST.reading=false;release();R.eng=v;persist();ST.failed=0;lg('المحرك: '+(v=='old'?'القديم':'الجديد'))});
  const k=o.querySelector('#tsk');k.oninput=()=>{R.k=+k.value;$i('tsv').textContent='×'+R.k};k.onchange=()=>persist();
  o.addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
   if(a=='x'){o.remove();SET=null;return}
   if(a=='aq'){o.style.display='none';orientWiz().then(()=>{o.style.display='flex';const qq=((T().adj|0)%4);o.querySelectorAll('#tsq button').forEach(x=>x.style.background=(+x.dataset.v==qq)?'#16a34a':'#334155')});return}
   if(a=='learn'){o.style.display='none';learnWiz().then(()=>{o.style.display='flex';dv()});return}
   if(a=='del'){if(ST.dev){delete PROF()[keyOf(ST.dev)];ST.prof=profOf(ST.dev);persist();status(ST.prof?'عاد الملف الجاهز':'حُذف الملف — اللوح غير معروف الآن')}return}
-  if(a=='tgo'){if(!B){hint('افتح سبورة أولاً');return}tabOn(!T().on);if(T().on){ST.failed=0;if(window.__rawWant()||ST.dev)startRaw()}upd();return}
+  if(a=='tgo'){const R=RS();R.wr=R.wr===false;persist();lg('الكتابة على السبورة: '+(R.wr?'مفعّلة':'متوقفة'));if(B)tabOn(R.wr?1:0);if(R.wr&&!ST.reading&&!ST.busy&&ST.dev){ST.failed=0;startRaw()}upd();return}
+  if(a=='perm'){const nb=NB();if(!nb||!ST.dev){status('لا يوجد لوح متصل (تحقق من الـOTG)');return}ST.failed=0;ST.denied=0;ST.permHint=0;if(ENG()){nb.s('usbWatch',ST.dev.vid,ST.dev.pid);nb.s('usbKick');lg('طُلب فتح/إذن من جديد')}else{const r=nb.s('usbAsk',ST.dev.vid,ST.dev.pid);lg('طلب الإذن: '+r)}return}
   if(a=='rs'){ST.failed=0;if(!ST.dev){status('لا يوجد لوح متصل (تحقق من الـOTG)');return}if(ST.reading)stopRaw(true);startRaw().then(()=>{upd()});return}
   if(a=='cplg'){const tx=LG.join('\n');try{navigator.clipboard.writeText(tx).then(()=>hint('نُسخ السجل'),()=>hint('تعذر النسخ'))}catch(e){hint('تعذر النسخ')}return}
   if(a=='stop'){stopRaw();upd();return}
@@ -3906,7 +3921,7 @@ phoneOri();setInterval(phoneOri,1500);
 /* ---------- زر 🧭: اتجاه اللوح الفيزيائي (عرضي ← طولي ١ ← عرضي مقلوب ← طولي ٢) ---------- */
 {const pb=$i('pmb'),NM=['عرضي','طولي ١','مقلوب','طولي ٢'];if(pb){const lab=()=>{const q=((T().adj|0)%4+4)%4,show=!!B&&!bc.hidden;pb.style.display=show?'':'none';pb.textContent='🧭 '+NM[q];pb.style.background=q?'#dc2626':'#64748b'};
  pb.onclick=()=>{const t=T();t.adj=(((t.adj|0)+1)%4);t.R=null;persist();lab();hint('اتجاه اللوح: '+NM[t.adj])};lab();setInterval(lab,300)}}
-window.__tab={LG,open:openSet,ST,learn,parseHID,dec,BUILTIN,onRep,scan,mapPt,startRaw,stopRaw,pollRaw};
+window.__tab={tabOn,RS,LG,open:openSet,ST,learn,parseHID,dec,BUILTIN,onRep,scan,mapPt,startRaw,stopRaw,pollRaw};
 setInterval(()=>{try{scan()}catch(e){}},1500);
 })();
 

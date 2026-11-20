@@ -204,6 +204,12 @@ class NativeBridge(private val a: MainActivity) {
     @JavascriptInterface fun usbState(): String = a.diag.permState
     @JavascriptInterface fun usbStart(vid: Int, pid: Int): String = try { a.diag.usbStart(vid, pid) } catch (e: Exception) { err(e) }
     @JavascriptInterface fun rawBlocked(): String = try { a.diag.blocked.toString() } catch (e: Exception) { "" }
+    @JavascriptInterface fun usbWatch(vid: Int, pid: Int): String = try { a.diag.usbWatch(vid, pid) } catch (e: Exception) { "error:" + (e.message ?: "") }
+    @JavascriptInterface fun usbKick(): String = try { a.diag.usbKick() } catch (e: Exception) { "error:" + (e.message ?: "") }
+    @JavascriptInterface fun usbStatus(): String = try { a.diag.usbStatus() } catch (e: Exception) { "{}" }
+    @JavascriptInterface fun engDescs(): String = try { a.diag.engDescs() } catch (e: Exception) { "[]" }
+    @JavascriptInterface fun engLog(): String = try { a.diag.engLog() } catch (e: Exception) { "[]" }
+    @JavascriptInterface fun usbStats(): String = try { a.diag.usbStats() } catch (e: Exception) { "{}" }
     @JavascriptInterface fun usbPoll(): String = try { a.diag.usbPoll() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun usbStop(): String { try { a.diag.usbStop() } catch (_: Exception) {}; return ok() }
     @JavascriptInterface fun capStart(): Boolean = try { a.diag.capStart() } catch (e: Exception) { false }
