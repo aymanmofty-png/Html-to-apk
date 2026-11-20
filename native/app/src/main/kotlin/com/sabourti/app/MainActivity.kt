@@ -393,6 +393,27 @@ class MainActivity : ComponentActivity() {
         return r
     }
 
+    private var injDown = 0L
+
+    /** يحقن لمسة إصبع حقيقية في الواجهة نيابةً عن قلم اللوح (لتعمل مختارات الملفات وغيرها التي تشترط لمسة حقيقية). */
+    fun injectTouch(t: String, x: Float, y: Float) {
+        runOnUiThread {
+            try {
+                val now = SystemClock.uptimeMillis()
+                val action = when (t) {
+                    "d" -> { injDown = now; MotionEvent.ACTION_DOWN }
+                    "m" -> MotionEvent.ACTION_MOVE
+                    else -> MotionEvent.ACTION_UP
+                }
+                val pp = MotionEvent.PointerProperties().apply { id = 0; toolType = MotionEvent.TOOL_TYPE_FINGER }
+                val pc = MotionEvent.PointerCoords().apply { this.x = x; this.y = y; pressure = 1f; size = 1f }
+                val ev = MotionEvent.obtain(injDown, now, action, 1, arrayOf(pp), arrayOf(pc), 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0)
+                web.dispatchTouchEvent(ev)
+                ev.recycle()
+            } catch (_: Exception) {}
+        }
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (diag.rawOn && !diag.evOn && isPenOrMouse(ev)) {
             diag.blocked++

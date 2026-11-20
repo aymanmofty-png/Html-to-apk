@@ -210,6 +210,7 @@ class NativeBridge(private val a: MainActivity) {
     @JavascriptInterface fun engDescs(): String = try { a.diag.engDescs() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun engLog(): String = try { a.diag.engLog() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun usbStats(): String = try { a.diag.usbStats() } catch (e: Exception) { "{}" }
+    @JavascriptInterface fun inject(t: String, x: Double, y: Double): String { a.injectTouch(t, x.toFloat(), y.toFloat()); return "ok" }
     @JavascriptInterface fun usbPoll(): String = try { a.diag.usbPoll() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun usbStop(): String { try { a.diag.usbStop() } catch (_: Exception) {}; return ok() }
     @JavascriptInterface fun capStart(): Boolean = try { a.diag.capStart() } catch (e: Exception) { false }
