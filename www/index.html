@@ -103,6 +103,15 @@ input,textarea,#ed{-webkit-user-select:text;user-select:text}
  <button id="de">🧽 ممحاة</button><button id="du">↶</button><button id="dr">🗑 مسح</button><button id="ds">✔ حفظ</button><button id="dx">إلغاء</button></div></div>
 <input type="file" id="fvid" accept="video/*" hidden><input type="file" id="fpdf" accept="application/pdf" hidden><div id="fv" hidden></div><button id="rc" hidden>⏺ إيقاف التسجيل</button><input type="file" id="fi" accept="image/*,.png,.jpg,.jpeg,.webp,.gif" hidden>
 <script>
+/* لا كيبورد خاص: كيبورد النظام دائماً (يُمنع inputmode=none وسياسة الكيبورد اليدوية) */
+(()=>{const sa=Element.prototype.setAttribute;Element.prototype.setAttribute=function(n,v){if(typeof n=='string'){const l=n.toLowerCase();if((l=='inputmode'&&String(v)=='none')||l=='virtualkeyboardpolicy')return}return sa.call(this,n,v)};
+try{const d=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'inputMode');if(d&&d.set)Object.defineProperty(HTMLElement.prototype,'inputMode',{configurable:true,enumerable:d.enumerable,get:d.get,set(v){if(String(v)!='none')d.set.call(this,v)}})}catch(e){}
+const fix=e=>{try{if(e.getAttribute('inputmode')=='none')e.removeAttribute('inputmode');if(e.hasAttribute('virtualkeyboardpolicy'))e.removeAttribute('virtualkeyboardpolicy')}catch(x){}};
+const sweep=r=>{try{if(r.matches&&r.matches('[inputmode],[virtualkeyboardpolicy]'))fix(r);r.querySelectorAll&&r.querySelectorAll('[inputmode],[virtualkeyboardpolicy]').forEach(fix)}catch(e){}};
+const go=()=>{sweep(document);new MutationObserver(ms=>{for(const m of ms){if(m.type=='attributes')fix(m.target);else m.addedNodes.forEach(n=>n.nodeType==1&&sweep(n))}}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['inputmode','virtualkeyboardpolicy']});
+ const st=document.createElement('style');st.textContent='#kbd,#kbo,#ckb2,#kbh{display:none!important}';document.head.append(st)};
+if(document.readyState=='loading')document.addEventListener('DOMContentLoaded',go);else go()})();
+
 const $=id=>document.getElementById(id),esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function ask(msg,def,solo){return new Promise(r=>{$('dlt').textContent=msg;const i=$('dli');i.hidden=def==null;i.value=def||'';$('dlc').hidden=!!solo;$('dlg').hidden=false;if(def!=null)setTimeout(()=>i.focus(),60);const f=v=>{$('dlg').hidden=true;r(v)};$('dlo').onclick=()=>f(def==null?true:i.value);$('dlc').onclick=()=>f(def==null?false:null)})}
 window.alert=m=>{ask(String(m),undefined,1)};
@@ -510,9 +519,9 @@ function measure(e){const W=RW(),H=RH(),ew=$('ew').getBoundingClientRect(),f1=v=
   t+='-----\nمدى القلم على الشاشة: '+Math.round(w)+' x '+Math.round(h)+' px  نسبة '+f1(w/(h||1))+'\nيغطي من الشاشة: عرض '+Math.round(100*w/W)+'%  ارتفاع '+Math.round(100*h/H)+'%\nالبداية: x='+Math.round(rr.x0)+' y='+Math.round(rr.y0)+'\nمقياس أفقي: '+f1(w/TAB[0])+' px/mm\nمقياس رأسي: '+f1(h/TAB[1])+' px/mm\nالتمدد (أفقي÷رأسي): '+f1(k)}else t+='-----\nلم تُلتقط حركة بعد';
  $('calt').textContent=t}
 $('calok').onclick=()=>calDone(0);$('calsk').onclick=()=>calDone(1);
-{let tm=0,lp=0;const b=$('tbn');b.onpointerdown=()=>{lp=0;tm=setTimeout(()=>{lp=1;calStart()},700)};b.onpointerup=()=>{clearTimeout(tm);if(lp)return;const t=T();if(t.on){t.on=0;fsOn(0);orient(0);b.classList.add('off');showTW();persist();return}t.on=1;PC=null;LE=null;fsOn(1);orient(1);b.classList.remove('off');persist();if(!S.tabHint){S.tabHint=1;hint('حرّك القلم فوق اللوح كالماوس؛ ارفعه وأعده لتصل لأي مكان. وبإصبعك مرّر السبورة')}if(t.ok||(window.__rawWant&&window.__rawWant()))showTW();else calStart();showTW()}}
-['pointerdown','pointermove','pointerup','pointercancel'].forEach(n=>window.addEventListener(n,e=>{const t=T();if(!B||!t.on||e.pointerType=='touch')return;
- if(e.isTrusted&&window.__rawLive&&window.__rawLive()&&!window.__diagOn){e.stopImmediatePropagation();e.preventDefault();return}
+{let tm=0,lp=0;const b=$('tbn');b.onpointerdown=()=>{lp=0;tm=setTimeout(()=>{lp=1;calStart()},700)};b.onpointerup=()=>{clearTimeout(tm);if(lp)return;const t=T();if(t.on){t.on=0;fsOn(0);orient(0);b.classList.add('off');showTW();persist();return}t.on=1;PC=null;LE=null;fsOn(1);orient(1);b.classList.remove('off');persist();if(!S.tabHint){S.tabHint=1;hint('حرّك القلم فوق اللوح كالماوس؛ ارفعه وأعده لتصل لأي مكان. وبإصبعك مرّر السبورة')}if(t.ok||(window.__rawBlock&&window.__rawBlock()))showTW();else calStart();showTW()}}
+['pointerdown','pointermove','pointerup','pointercancel'].forEach(n=>window.addEventListener(n,e=>{if(e.pointerType!='touch'&&e.isTrusted&&window.__rawBlock&&window.__rawBlock()&&!window.__diagOn){e.stopImmediatePropagation();e.preventDefault();return}
+const t=T();if(!B||!t.on||e.pointerType=='touch')return;
  if(e.pointerType=='mouse'&&!cal){e.stopImmediatePropagation();e.preventDefault();return}
  if(cal){e.preventDefault();e.stopPropagation();const r=cr||(cr={x0:1e9,y0:1e9,x1:-1,y1:-1});r.x0=Math.min(r.x0,e.clientX);r.x1=Math.max(r.x1,e.clientX);r.y0=Math.min(r.y0,e.clientY);r.y1=Math.max(r.y1,e.clientY);if(e.type=="pointerdown")cs0=[e.clientX,e.clientY];ce0=[e.clientX,e.clientY];measure(e);return}
  e.stopImmediatePropagation();e.preventDefault();const R=t.R;if(R){if(e.clientX<R.x0){R.w+=R.x0-e.clientX;R.x0=e.clientX}else if(e.clientX>R.x0+R.w)R.w=e.clientX-R.x0;if(e.clientY<R.y0){R.h+=R.y0-e.clientY;R.y0=e.clientY}else if(e.clientY>R.y0+R.h)R.h=e.clientY-R.y0}
@@ -539,9 +548,9 @@ function uiTap(e,X,Y){const dn=e.type=='pointerdown';let el=null;if(dn||uit){hv.
  if(uit.tagName=='INPUT'&&uit.type=='range'&&e.type!='pointercancel'){const r=uit.getBoundingClientRect(),mn=+uit.min||0,mx=+uit.max||100,f=r.height>r.width?(Y-r.top)/r.height:(X-r.left)/r.width;uit.value=mn+Math.max(0,Math.min(1,f))*(mx-mn);uit.dispatchEvent(new Event('input',{bubbles:true}));if(e.type=='pointerup'){uit.dispatchEvent(new Event('change',{bubbles:true}));uit=null}return true}
  if(e.type=='pointerup'||e.type=='pointercancel'){const t=uit;uit=null;if(e.type=='pointerup'&&(el===t||t.contains(el)||el&&el.contains(t))){const[sx,sy]=ROT?toScr(X,Y):[X,Y],o={bubbles:true,cancelable:true,clientX:sx,clientY:sy,pointerType:'touch',pointerId:99,isPrimary:true,view:window};t.dispatchEvent(new PointerEvent('pointerdown',o));t.dispatchEvent(new PointerEvent('pointerup',o));t.dispatchEvent(new MouseEvent('click',o));if(ED(t))t.focus()}}
  return true}
-const HVS='position:fixed;z-index:11;width:22px;height:22px;margin:-11px 0 0 -11px;border:2px solid #e11;border-radius:50%;pointer-events:none;box-shadow:0 0 0 1px #fff';let hv=document.createElement('div');hv.style.cssText=HVS+';display:none';document.body.append(hv);
+const HVS='position:fixed;z-index:2147483000;width:22px;height:22px;margin:-11px 0 0 -11px;border:2px solid #e11;border-radius:50%;pointer-events:none;box-shadow:0 0 0 1px #fff';let hv=document.createElement('div');hv.style.cssText=HVS+';display:none';document.body.append(hv);
 function ring(X,Y,e){hv.style.display='';if(e.type=='pointerdown'&&!document.fullscreenElement&&performance.now()-(ring.fs||0)>8000){ring.fs=performance.now();fsOn(1)}if(hv.parentNode!=APP())APP().append(hv);hv.style.left=X+'px';hv.style.top=Y+'px';
- const el=PD?null:uiAt(X,Y),on=PD?!!ring.on:!!(el&&el.closest&&el.closest('button,input,select,textarea,a,label,summary,[onclick],[role=button],[data-a],.sw,.pop *'));if(on!=ring.on){ring.on=on;hv.style.cssText=on?'position:fixed;z-index:11;width:20px;height:28px;margin:0;pointer-events:none;background:'+ARW+' no-repeat;background-size:contain;filter:drop-shadow(0 1px 2px #0006)':HVS}}
+ const el=PD?null:uiAt(X,Y),on=PD?!!ring.on:!!(el&&el.closest&&el.closest('button,input,select,textarea,a,label,summary,[onclick],[role=button],[data-a],.sw,.pop *'));if(on!=ring.on){ring.on=on;hv.style.cssText=on?'position:fixed;z-index:2147483000;width:20px;height:28px;margin:0;pointer-events:none;background:'+ARW+' no-repeat;background-size:contain;filter:drop-shadow(0 1px 2px #0006)':HVS;hv.style.display='';hv.style.left=X+'px';hv.style.top=Y+'px'}}
 addEventListener('resize',()=>{showTW();if(B&&!bc.hidden){gl.width=innerWidth;gl.height=innerHeight;sync()}});
 
 let ROT=null,SUSP=0,PM=0;const RAon=()=>!!PM;const APP=()=>document.getElementById('app')||document.body;
@@ -1946,7 +1955,7 @@ const kbo=document.createElement('button');kbo.id='kbo';kbo.textContent='⌨';AP
 const ckb2=document.createElement('button');ckb2.id='ckb2';ckb2.textContent='⌨ رجوع للكيبورد الخاص';document.body.append(ckb2);
 let KM=[],KH=0;
 const ed0=$$('ed'),ew0=$$('ew');ed0.setAttribute('virtualkeyboardpolicy','manual');let LZT=null;let LZR=null;document.addEventListener('selectionchange',()=>{if(LZT&&LZT.isContentEditable){const g=getSelection();if(g.rangeCount&&LZT.contains(g.anchorNode))LZR=g.getRangeAt(0).cloneRange()}});
-window.__ckLz={set(el){LZT=el;window.__ckLT=el;LZR=null;if(el){CK.hid=0;CK.sys=0;window.__ckb=1;el.setAttribute('inputmode','none')}else{if(!(B&&B.tool=='kb'))window.__ckb=0}setTimeout(sync,0);setTimeout(sync,100)},get KH(){return KH+(LZT&&KH?40:0)}};
+window.__ckLz={set(el){/* الكيبورد الخاص أُزيل: كيبورد النظام دائماً */setTimeout(sync,0)},get KH(){return 0}};
 const khOf=()=>clamp(Math.round(innerHeight*.064*SC().sc),38,76);
 function build(){
  const lang=CK.lang,P=CK.pg,ar=lang=='ar',sh=CK.sh;KM=[];
@@ -2082,13 +2091,14 @@ kbd.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closes
  else{const c=(S.lzclip||[])[+b.dataset.cl],t=String(c&&c.t!=null?c.t:c);if(t)ins(t)}setTimeout(updStrip,60)},true);
 function sync(){const on=!!(LZT||(B&&B.tool=='kb'));const ae=document.activeElement,other=ae&&ae!==ed0&&ae!==LZT&&ae!==document.body&&(ae.isContentEditable||ae.tagName=='TEXTAREA'||(ae.tagName=='INPUT'&&!/^(range|color|checkbox|radio|button|submit|file|image|reset)$/i.test(ae.type)));
  if(!on){document.documentElement.classList.remove('ckv');if(CK.sys){CK.sys=0}window.__ckb=0;KH=0;kbd.style.display='none';kbo.style.display='none';ckb2.style.display='none';ew0.style.paddingBottom='';if(ed0.getAttribute('inputmode')=='none')ed0.removeAttribute('inputmode');return}
- if(CK.sys){window.__ckb=0;KH=0;kbd.style.display='none';kbo.style.display='none';ckb2.style.display='block';layoutPad();return}
+ if(CK.sys){window.__ckb=0;KH=0;kbd.style.display='none';kbo.style.display='none';ckb2.style.display='none';layoutPad();return}
  ckb2.style.display='none';window.__ckb=1;if(ed0.getAttribute('inputmode')!='none')ed0.setAttribute('inputmode','none');
  const show=!CK.hid&&!other;kbo.style.display=(CK.hid&&!other)?'flex':'none';
  if(show){if(kbd.style.display!='block'||!kbd.firstChild){kbd.style.display='block';build()}else{const kh=khOf()+'px';if(kbd.style.getPropertyValue('--kh')!=kh){build()}}KH=kbd.offsetHeight;anchorK();document.documentElement.classList.add('ckv')}else{kbd.style.display='none';KH=0;document.documentElement.classList.remove('ckv')}
  layoutPad()}
-const t0=tool;tool=function(k,q){if(k=='kb'&&B){CK.hid=0;CK.sys=0;window.__ckb=1;ed0.setAttribute('inputmode','none')}
- const r=t0.apply(this,arguments);setTimeout(sync,0);setTimeout(sync,120);return r};
+const t0=tool;tool=function(k,q){const wasKb=!!(B&&B.tool=='kb');const r=t0.apply(this,arguments);
+ if(k=='kb'&&B){CK.hid=0;setTimeout(()=>{if(B&&B.tool=='kb')toSys()},30)}else if(wasKb&&k!='kb'){try{ed0.blur()}catch(e){}}
+ setTimeout(sync,0);setTimeout(sync,120);return r};
 setInterval(sync,400);
 window.__v20={CK,build,sync,toSys,toCustom,ins,del,KM:()=>KM,PR,WINS,defS,placeW,scanW};
 })();
@@ -3188,8 +3198,8 @@ const end=e=>{if(!act||e.pointerId!=act.id)return;const t=act.t;act=null;t.class
 addEventListener('pointerup',end,true);addEventListener('pointercancel',end,true);
 /* ---- كل خانات الكتابة تستعمل لوحتنا ---- */
 const txt0=t=>t&&((t.tagName=='TEXTAREA')||(t.tagName=='INPUT'&&/^(text|search|url|email|tel|number|password|)$/i.test(t.type))||(t.id=='ed'&&(typeof B=='undefined'||!B)))&&!t.closest('#kbd,#tkb,#tcl');
-const txt=t=>txt0(t)&&S.ckAll!==false;
-let back=null;addEventListener('focusin',e=>{const t=e.target;if(S.ckAll===false&&txt0(t)){if(!back){back=document.createElement('button');back.textContent='⌨ لوحتنا';back.style.cssText='position:fixed;left:8px;top:8px;z-index:140;background:#92400e;color:#fff;border:0;border-radius:16px;padding:8px 14px;font:700 14px system-ui';back.onclick=()=>{S.ckAll=true;persist();back.remove();back=null;const a=document.activeElement;if(a)a.blur();setTimeout(()=>a&&a.focus(),60)};APPE().append(back)}}else if(back){back.remove();back=null}},true);
+const txt=t=>false;
+let back=null;addEventListener('focusin',e=>{const t=e.target;if(false&&txt0(t)){if(!back){back=document.createElement('button');back.textContent='⌨ لوحتنا';back.style.cssText='position:fixed;left:8px;top:8px;z-index:140;background:#92400e;color:#fff;border:0;border-radius:16px;padding:8px 14px;font:700 14px system-ui';back.onclick=()=>{S.ckAll=true;persist();back.remove();back=null;const a=document.activeElement;if(a)a.blur();setTimeout(()=>a&&a.focus(),60)};APPE().append(back)}}else if(back){back.remove();back=null}},true);
 let bound=null;
 addEventListener('focusin',e=>{const t=e.target;if(!txt(t)||t.dataset.sysk)return;if(window.__ckLz){t.setAttribute('inputmode','none');bound=t;window.__ckLz.set(t);setTimeout(()=>keep(t),260);setTimeout(()=>keep(t),700)}},true);
 addEventListener('focusout',e=>{const t=e.target;if(t!==bound)return;setTimeout(()=>{const a=document.activeElement;if(bound===t&&!(txt(a))&&window.__ckLT===t&&!(t.id=='ed'&&t.offsetParent&&!(a&&a.closest&&a.closest('#kbd')))){bound=null;window.__ckLz.set(null);pad(null)}},180)},true);
@@ -3740,6 +3750,7 @@ const LG=[];const lg=m=>{try{LG.push(new Date().toTimeString().slice(0,8)+' '+m)
 const status=s=>{ST.status=s;lg(s);const e=$i('tsst');if(e)e.textContent=s};
 function pickDev(l){let c=l.filter(d=>TABV.includes(d.vid));if(!c.length&&RS().pick)c=l.filter(d=>keyOf(d)==RS().pick);return c[0]||null}
 window.__rawLive=()=>ST.reading&&!!ST.prof&&!ST.noInj;
+window.__rawBlock=()=>{try{return !!(RS().src!='android'&&ST.dev)}catch(e){return false}};
 window.__rawWant=()=>{try{return !!(NB()&&RS().src!='android'&&ST.dev&&ST.prof&&!ST.failed)}catch(e){return false}};
 const reori=()=>{};
 function tabOn(v){const t=T(),b=$i('tbn');if(v&&!t.on){t.on=1;PC=null;LE=null;try{fsOn(1)}catch(e){}orient(1);b&&b.classList.remove('off');persist();try{showTW()}catch(e){}}else if(!v&&t.on){t.on=0;try{fsOn(0)}catch(e){}orient(0);b&&b.classList.add('off');persist();stopRaw(true);try{showTW()}catch(e){}}}
@@ -3748,19 +3759,22 @@ async function scan(){const nb=NB();if(!nb)return;const l=nb.jr('usbList');if(!A
  if(!ST.dev||keyOf(ST.dev)!=keyOf(d)){ST.dev=d;ST.prof=profOf(d);ST.hint=0;ST.failed=0;ST.denied=0;ST.failN=0;if(ST.reading)stopRaw(true);status(ST.prof?'تم اكتشاف '+(ST.prof.name||d.product||'اللوح')+' (ملف جاهز)':'لوح جديد: '+(d.product||keyOf(d))+' — غير معروف بعد')}else ST.dev=d;
  if(!ST.prof){if(!ST.hint&&B&&T().on){ST.hint=1;hint('لوح جديد غير معروف. افتح ➕ ← «إعدادات اللوح» ← «تعلّم لوحاً جديداً»')}return}
 
- if(B&&ST.rtB!==B){ST.rtB=B;if(ST.failed){ST.failed=0;ST.denied=0;ST.failN=0;lg('سبورة جديدة: أعيد المحاولة')}}
- if(ST.failed&&!ST.denied&&(ST.failN||0)<4&&performance.now()-(ST.failAt||0)>6000&&B&&T().on&&RS().src!='android'){ST.failed=0;lg('إعادة محاولة تلقائية #'+((ST.failN||0)+1))}
+ if(RS().src=='android'){if(ST.reading){stopRaw(true);lg('تحويل إلى قراءة أندرويد (يدوي) — أعد توصيل اللوح')}return}
+ if(ST.reading&&ST.devName&&d.name&&d.name!=ST.devName){lg('تغيّر اسم الجهاز: أعيد فتح القراءة');stopRaw(true);ST.failed=0}
+ if(ST.reading){let bk=0;try{bk=+nb.s('rawBlocked')||0}catch(e){}const nw=performance.now();if(bk>(ST.bk0||0)&&nw-(ST.repT||0)>2500&&nw-(ST.rsT||0)>2500){lg('أحداث أندرويد تُحجب والتقارير صامتة: أعيد فتح القراءة');stopRaw(true);ST.failed=0}ST.bk0=bk}
+ if(B&&ST.rtB!==B){ST.rtB=B;if(ST.failed&&!ST.denied){ST.failed=0;ST.failN=0;lg('سبورة جديدة: أعيد المحاولة')}}
+ if(ST.failed&&!ST.denied&&(ST.failN||0)<4&&performance.now()-(ST.failAt||0)>6000){ST.failed=0;lg('إعادة محاولة تلقائية #'+((ST.failN||0)+1))}
  if(B&&!T().on&&RS().auto!==false&&RS().src!='android'&&!ST.failed&&ST.autoB!==B){ST.autoB=B;tabOn(1)}
- if(B&&T().on&&RS().src!='android'&&!ST.reading&&!ST.busy&&!ST.failed)startRaw()}
+ if(!ST.reading&&!ST.busy&&!ST.failed)startRaw()}
 async function startRaw(learnMode){const nb=NB();if(!nb||ST.busy||ST.reading||!ST.dev)return false;ST.busy=1;const d=ST.dev;
  try{let a=nb.s('usbAsk',d.vid,d.pid);if(a!='granted'){status('اسمح بإذن USB في النافذة…');for(let i=0;i<60;i++){await sleep(500);const s=nb.s('usbState');if(s=='granted'||s=='denied')break}a=nb.s('usbState')}
-  if(a!='granted'){status('لم يُمنح إذن USB — يعمل اللوح عبر أندرويد (تغطية جزئية). اضغط «ابدأ القراءة الخام الآن» بعد السماح');ST.failed=1;ST.denied=1;ST.failAt=performance.now();ST.busy=0;return false}
-  const r=nb.jr('usbStart',d.vid,d.pid);if(!r||r.error){status('تعذر فتح اللوح: '+((r&&r.error)||'')+' — يعمل عبر أندرويد (تغطية جزئية)');ST.failed=1;ST.failAt=performance.now();ST.failN=(ST.failN||0)+1;ST.busy=0;return false}
-  ST.descs=r.descs||[];ST.reading=true;ST.busy=0;ST.noInj=!!learnMode;ST.failed=0;ST.denied=0;ST.failN=0;ST.timer=setInterval(pollRaw,8);status(learnMode?'قراءة اللوح للتعلّم…':'القراءة الخام تعمل ✔');return true}
+  if(a!='granted'){status('لم يُمنح إذن USB — اللوح معطّل (الإصبع فقط). اسمح بالإذن ثم اضغط «ابدأ القراءة الخام الآن»');ST.failed=1;ST.denied=1;ST.failAt=performance.now();ST.busy=0;return false}
+  const r=nb.jr('usbStart',d.vid,d.pid);if(!r||r.error){status('تعذر فتح اللوح: '+((r&&r.error)||'')+' — اللوح معطّل (الإصبع فقط). جرّب «ابدأ القراءة الخام الآن» أو أعد توصيل اللوح');ST.failed=1;ST.failAt=performance.now();ST.failN=(ST.failN||0)+1;ST.busy=0;return false}
+  ST.descs=r.descs||[];ST.devName=d.name;ST.rsT=performance.now();ST.reading=true;ST.busy=0;ST.noInj=!!learnMode;ST.failed=0;ST.denied=0;ST.failN=0;ST.timer=setInterval(pollRaw,8);status(learnMode?'قراءة اللوح للتعلّم…':'القراءة الخام تعمل ✔');return true}
  catch(e){status('خطأ: '+e);ST.busy=0;ST.failed=1;ST.failAt=performance.now();ST.failN=(ST.failN||0)+1;return false}}
 function stopRaw(quiet){clearInterval(ST.timer);ST.timer=null;try{NB()&&NB().s('usbStop')}catch(e){}ST.reading=false;release();if(!quiet){ST.failed=1;ST.denied=1;status('تم إيقاف القراءة الخام — أعد توصيل اللوح ليعود للنظام')}}
 function pollRaw(){const nb=NB();if(!nb)return;const a=nb.jr('usbPoll');if(!a||!a.length)return;
- for(const l of a){const k=l.indexOf('|'),tg=l.slice(0,k),b=HX(l.slice(k+1));if(ST.tap)ST.tap(tg,b);if(ST.noInj||!ST.prof)continue;if(tg.indexOf(ST.prof.tag)!=0)continue;ST.cnt++;onRep(b)}}
+ for(const l of a){const k=l.indexOf('|'),tg=l.slice(0,k),b=HX(l.slice(k+1));if(ST.tap)ST.tap(tg,b);if(ST.noInj||!ST.prof)continue;if(tg.indexOf(ST.prof.tag)!=0)continue;ST.cnt++;ST.repT=performance.now();onRep(b)}}
 /* ---------- الربط بالسبورة ---------- */
 const rotq=(u,v,q)=>q==1?[v,1-u]:q==2?[1-u,1-v]:q==3?[1-v,u]:[u,v];
 function mapPt(P,u,v,contact,now){const R=RS(),q=Q(),[a,b]=rotq(u,v,q),xr=(P.f.x.max-(P.f.x.min||0))||1,yr=(P.f.y.max-(P.f.y.min||0))||1,tw=q%2?yr:xr,th=q%2?xr:yr,W=innerWidth,H=innerHeight;
@@ -3776,21 +3790,31 @@ const curve=p=>{const c=RS().pc;return c=='s'?Math.pow(p,.7):c=='h'?Math.pow(p,1
 function emit(type,X,Y,pr,bt){const ev=new PointerEvent(type,{pointerId:77,pointerType:'pen',isPrimary:true,clientX:X,clientY:Y,pressure:pr,buttons:bt,button:type=='pointermove'?-1:0,width:1,height:1,bubbles:true,cancelable:true});
  const m=new Proxy(ev,{get:(o,k)=>k=='target'?bc:(k=='preventDefault'||k=='stopPropagation'||k=='stopImmediatePropagation')?()=>{}:typeof o[k]=='function'?o[k].bind(o):o[k]});
  ST.pos=[X,Y];try{ring(X,Y,m)}catch(e){}try{if(uiTap(m,X,Y))return}catch(e){}const f=bc['on'+type];if(f)try{f(m)}catch(e){}}
-function release(){if(ST.down){ST.down=false;const p=ST.pos||[0,0];try{PD=0}catch(e){}emit('pointerup',p[0],p[1],0,0)}ST.last=null;ST.present=false;btnSet(1,0);btnSet(2,0)}
+function release(){if(ST.pm)pmEnd(...(ST.pos||[0,0]));if(ST.down){ST.down=false;const p=ST.pos||[0,0];try{PD=0}catch(e){}emit('pointerup',p[0],p[1],0,0)}ST.last=null;ST.present=false;btnSet(1,0);btnSet(2,0)}
 function btnSet(n,on){if(!!on==!!ST['b'+n])return;ST['b'+n]=on?1:0;const act=RS()['b'+n];if(!B)return;
  try{if(act=='er'){if(on){ST.prev=B.tool;tool('er',1)}else tool(ST.prev&&ST.prev!='er'?ST.prev:'pen',1)}
   else if(act=='tg'){if(on){if(B.tool=='er')tool(ST.prev&&ST.prev!='er'?ST.prev:'pen',1);else{ST.prev=B.tool;tool('er',1)}}}
   else if(act=='undo'){if(on)undo(1)}else if(act=='redo'){if(on)undo(0)}}catch(e){}}
 function onRep(b){const P=ST.prof,d=dec(P,b),now=performance.now();if(d&&!d.leave){ST.live={u:d.u,v:d.v,p:d.p,tip:d.tip,prox:d.prox,b1:d.b1,b2:d.b2,t:now,n:(ST.live?ST.live.n:0)+1}}if(!d||d.leave||!d.prox){if(ST.present||ST.down)release();return}
- if(SET&&!ST.cap){if(ST.present||ST.down)release();return}
- if(ST.cap){ST.cap(d,b);return}if(!B||!T().on)return;
+ if(SET&&SET.isConnected&&!ST.cap){if(ST.present||ST.down)release();return}
+ if(ST.cap){ST.cap(d,b);return}
  ST.lastT=now;ST.present=true;btnSet(1,d.b1);btnSet(2,d.b2);
  const c=!!d.tip,[X,Y]=mapPt(P,d.u,d.v,c,now),pr=Math.max(.02,curve(d.p));
+ if(!B||!T().on){if(ST.down){ST.down=false;emit('pointerup',X,Y,0,0)}return pmode(c,X,Y)}
+ if(ST.pm)pmEnd(X,Y);
  if(c&&!ST.down){ST.down=true;try{PD=1}catch(e){}emit('pointerdown',X,Y,pr,1)}
  else if(c)emit('pointermove',X,Y,pr,1);
  else if(!c&&ST.down){ST.down=false;try{PD=0}catch(e){}emit('pointerup',X,Y,0,0)}
  else if(now-(ST.hv||0)>7){ST.hv=now;emit('pointermove',X,Y,0,0)}}
-setInterval(()=>{if(ST.present&&performance.now()-ST.lastT>300)release()},100);
+/* ---- مؤشر عام: اللوح كفأرة خارج السبورة (حركة، نقرة، سحب = تمرير) ---- */
+const scrP=el=>{while(el&&el!==document.body&&el!==document.documentElement){const cs=getComputedStyle(el);if(/(auto|scroll)/.test(cs.overflowY)&&el.scrollHeight>el.clientHeight+2)return el;el=el.parentElement}return document.scrollingElement||document.documentElement};
+function pmode(c,X,Y){ST.pos=[X,Y];try{PD=c?1:0}catch(e){}ring(X,Y,{type:'pointermove'});
+ if(c&&!ST.pm){hv.style.pointerEvents='none';ST.pm={x:X,y:Y,ly:Y,sc:0,el:document.elementFromPoint(X,Y)};try{uiTap({type:'pointerdown'},X,Y)}catch(e){}}
+ else if(c){const p=ST.pm;if(!p.sc&&Math.hypot(X-p.x,Y-p.y)>12){p.sc=1;try{uiTap({type:'pointercancel'},X,Y)}catch(e){}}
+  if(p.sc){const sp=scrP(p.el);if(sp)sp.scrollTop-=(Y-p.ly)}else{try{uiTap({type:'pointermove'},X,Y)}catch(e){}}p.ly=Y}
+ else if(ST.pm)pmEnd(X,Y)}
+function pmEnd(X,Y){const p=ST.pm;ST.pm=null;try{PD=0}catch(e){}if(p&&!p.sc){try{uiTap({type:'pointerup'},X,Y)}catch(e){}}else if(p){try{uiTap({type:'pointercancel'},X,Y)}catch(e){}}}
+setInterval(()=>{const n=performance.now();if(ST.present&&n-ST.lastT>300)release();if(!ST.present&&n-ST.lastT>1500&&hv.style.display!='none'&&!B)hv.style.display='none'},100);
 bc.setPointerCapture=function(id){if(id===77)return;return Element.prototype.setPointerCapture.call(this,id)};
 bc.releasePointerCapture=function(id){if(id===77)return;return Element.prototype.releasePointerCapture.call(this,id)};
 /* ---------- ربط مع النظام القائم ---------- */
@@ -3819,7 +3843,7 @@ function openSet(){if(SET)return;const R=RS(),t=T(),o=document.createElement('di
  +sec('اتجاه الهاتف')+seg('tsp',[['p','عمودي دائماً'],['a','تلقائي (يدور)']],R.ph||'p')
  +sec('زر القلم الأول')+seg('tsb1',acts,R.b1)+sec('زر القلم الثاني')+seg('tsb2',acts,R.b2)
  +sec('حساسية الضغط')+seg('tspc',[['s','ناعم'],['n','عادي'],['h','قاسٍ']],R.pc||'n')
- +sec('مصدر القراءة')+seg('tssrc',[['auto','خام عند الإمكان'],['android','أندرويد فقط (القديم)']],R.src)
+ +sec('مصدر القراءة')+seg('tssrc',[['auto','خام فقط (الأفضل)'],['android','أندرويد (يدوي إن فشل الخام)']],R.src)
  +'<div id="tsdev" style="font-size:12px;color:#cbd5e1"></div>'
  +sec('سجل الأحداث')+'<pre id="tslg" style="margin:0;background:#0b1220;border-radius:8px;padding:8px;font:11px/1.5 ui-monospace,monospace;direction:rtl;white-space:pre-wrap;max-height:160px;overflow:auto"></pre><button data-a="cplg" style="'+BT()+'">نسخ السجل</button>'
  +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button data-a="learn" style="'+BT('#16a34a')+';flex:1">تعلّم لوحاً جديداً / أعد التشخيص</button><button data-a="del" style="'+BT()+';flex:1">حذف ملف اللوح المحفوظ</button><button data-a="stop" style="'+BT()+';flex:1">إيقاف القراءة الخام</button><button data-a="dg" style="'+BT()+';flex:1">تقرير التشخيص</button></div>';
@@ -3827,7 +3851,7 @@ function openSet(){if(SET)return;const R=RS(),t=T(),o=document.createElement('di
  const upd=()=>{const lgE=$i('tslg');if(lgE){const tx=LG.join('\n');if(lgE.textContent!==tx){lgE.textContent=tx;lgE.scrollTop=1e9}}const g=$i('tstg');if(g){const on=!!T().on;g.textContent=on?'✍ وضع اللوح: مفعّل — اضغط للإيقاف':'✍ وضع اللوح: متوقف — اضغط للتشغيل';g.style.background=on?'#16a34a':'#b45309'}const L=ST.live,d=$i('tsdt'),x=$i('tstx');if(!x)return;if(!ST.reading){x.textContent='القراءة الخام غير شغّالة'+(ST.dev?'':' (لا لوح متصل)');if(d)d.style.background='#64748b';return}if(!L||performance.now()-L.t>500){x.textContent=ST.cnt||L?'القلم خارج نطاق اللوح (أو لا تقارير الآن)':'لا بيانات بعد — حرّك القلم فوق اللوح';if(d)d.style.background='#64748b';return}if(d){d.style.left=(L.u*100)+'%';d.style.top=(L.v*100)+'%';d.style.background=L.tip?'#22c55e':'#fbbf24'}let bk='';try{bk=NB()&&NB().s('rawBlocked')}catch(e){}x.textContent='x '+L.u.toFixed(3)+'  y '+L.v.toFixed(3)+'\nضغط '+Math.round(L.p*100)+'%  '+(L.tip?'لمس':'تحليق')+'\nزر١ '+(L.b1?'●':'○')+'  زر٢ '+(L.b2?'●':'○')+'  #'+L.n+(bk?'\nأحداث أندرويد المحجوبة: '+bk:'')};
  const dv=()=>{upd();const e=$i('tsdev');if(!e)return;const l=ST.all||[];e.textContent='أجهزة USB: '+(l.length?l.map(d=>(d.product||'?')+' ['+keyOf(d)+']'+(ST.dev&&keyOf(d)==keyOf(ST.dev)?' ✔':'')).join(' | '):'لا يوجد')+(ST.prof?'\nالملف: '+(ST.prof.name||ST.prof.src):'')};dv();status(ST.status||'—');
  setSeg(o,'tsq',v=>{t.adj=+v;t.R=null;persist()});setSeg(o,'tsm',v=>{R.mode=v;persist()});setSeg(o,'tsa',v=>{R.an=+v;persist()});setSeg(o,'tsp',v=>{R.ph=v;persist();ori=null;phoneOri()});
- setSeg(o,'tsb1',v=>{R.b1=v;persist()});setSeg(o,'tsb2',v=>{R.b2=v;persist()});setSeg(o,'tspc',v=>{R.pc=v;persist()});setSeg(o,'tssrc',v=>{R.src=v;persist();ST.failed=0;reori()});setSeg(o,'tsau',v=>{R.auto=v=='1';persist()});
+ setSeg(o,'tsb1',v=>{R.b1=v;persist()});setSeg(o,'tsb2',v=>{R.b2=v;persist()});setSeg(o,'tspc',v=>{R.pc=v;persist()});setSeg(o,'tssrc',v=>{R.src=v;persist();ST.failed=0;if(v=='android'){stopRaw(true);hint('أعد توصيل اللوح (افصله ثم وصّله) ليعود أندرويد لقراءته')}else hint('سيبدأ القراءة الخام خلال ثوانٍ')});setSeg(o,'tsau',v=>{R.auto=v=='1';persist()});
  const k=o.querySelector('#tsk');k.oninput=()=>{R.k=+k.value;$i('tsv').textContent='×'+R.k};k.onchange=()=>persist();
  o.addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
   if(a=='x'){o.remove();SET=null;return}
@@ -3882,7 +3906,7 @@ phoneOri();setInterval(phoneOri,1500);
 /* ---------- زر 🧭: اتجاه اللوح الفيزيائي (عرضي ← طولي ١ ← عرضي مقلوب ← طولي ٢) ---------- */
 {const pb=$i('pmb'),NM=['عرضي','طولي ١','مقلوب','طولي ٢'];if(pb){const lab=()=>{const q=((T().adj|0)%4+4)%4,show=!!B&&!bc.hidden;pb.style.display=show?'':'none';pb.textContent='🧭 '+NM[q];pb.style.background=q?'#dc2626':'#64748b'};
  pb.onclick=()=>{const t=T();t.adj=(((t.adj|0)+1)%4);t.R=null;persist();lab();hint('اتجاه اللوح: '+NM[t.adj])};lab();setInterval(lab,300)}}
-window.__tab={open:openSet,ST,learn,parseHID,dec,BUILTIN,onRep,scan,mapPt,startRaw,stopRaw,pollRaw};
+window.__tab={LG,open:openSet,ST,learn,parseHID,dec,BUILTIN,onRep,scan,mapPt,startRaw,stopRaw,pollRaw};
 setInterval(()=>{try{scan()}catch(e){}},1500);
 })();
 
