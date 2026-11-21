@@ -95,10 +95,62 @@ class MainActivity : ComponentActivity() {
         if (requestCode == 77) unlockPortrait()
     }
 
+    /** مصدر اختيار الصور القادم من الصفحة: gal = المعرض/المحدّد الافتراضي، files = تطبيق الملفات. */
+    @Volatile var pickMode: String = "gal"
+    @Volatile var pickInfo: String = ""
+
+    /** بعض معارض الهواتف (شاومي) ترد بصيغة غير معتادة فيعيد parseResult قائمة فارغة؛ نقرأ الرد الخام بأنفسنا. */
+    private fun rawUris(r: androidx.activity.result.ActivityResult): Array<Uri>? {
+        if (r.resultCode != android.app.Activity.RESULT_OK) return null
+        val d = r.data ?: return emptyArray()
+        val out = LinkedHashSet<Uri>()
+        try {
+            val c = d.clipData
+            if (c != null) for (i in 0 until c.itemCount) c.getItemAt(i).uri?.let { out.add(it) }
+        } catch (_: Exception) {}
+        d.data?.let { out.add(it) }
+        try {
+            val ex = d.extras
+            if (ex != null) for (k in ex.keySet()) {
+                @Suppress("DEPRECATION")
+                val v = ex.get(k)
+                fun add(x: Any?) {
+                    when (x) {
+                        is Uri -> out.add(x)
+                        is String -> if (x.startsWith("content://") || x.startsWith("file://")) out.add(Uri.parse(x))
+                        is Iterable<*> -> x.forEach { add(it) }
+                        is Array<*> -> x.forEach { add(it) }
+                    }
+                }
+                add(v)
+            }
+        } catch (_: Exception) {}
+        return out.toTypedArray()
+    }
+
+    private fun describePick(r: androidx.activity.result.ActivityResult): String = try {
+        val d = r.data
+        val keys = try { d?.extras?.keySet()?.joinToString(",") ?: "-" } catch (_: Exception) { "?" }
+        "code=" + r.resultCode + " data=" + (d?.data != null) + " clip=" + (d?.clipData?.itemCount ?: 0) + " extras=" + keys
+    } catch (e: Exception) { "?" }
+
     private val chooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
         unlockPortrait()
-        fileCb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(r.resultCode, r.data))
+        pickInfo = describePick(r)
+        val std = try { WebChromeClient.FileChooserParams.parseResult(r.resultCode, r.data) } catch (_: Exception) { null }
+        val fin = if (std != null && std.isNotEmpty()) std else rawUris(r)
+        fileCb?.onReceiveValue(fin)
         fileCb = null
+    }
+
+    private fun docIntent(p: WebChromeClient.FileChooserParams): Intent {
+        val t = p.acceptTypes.filter { it.isNotBlank() }
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        i.addCategory(Intent.CATEGORY_OPENABLE)
+        i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, p.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE)
+        if (t.size == 1) i.type = t[0]
+        else { i.type = "*/*"; if (t.isNotEmpty()) i.putExtra(Intent.EXTRA_MIME_TYPES, t.toTypedArray()) }
+        return i
     }
 
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -236,7 +288,9 @@ class MainActivity : ComponentActivity() {
                 fileCb = cb
                 lockPortrait()
                 return try {
-                    chooser.launch(p.createIntent())
+                    val mode = pickMode
+                    pickMode = "gal"
+                    chooser.launch(if (mode == "files") docIntent(p) else p.createIntent())
                     true
                 } catch (e: Exception) {
                     unlockPortrait()

@@ -210,6 +210,27 @@ class NativeBridge(private val a: MainActivity) {
     @JavascriptInterface fun engDescs(): String = try { a.diag.engDescs() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun engLog(): String = try { a.diag.engLog() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun usbStats(): String = try { a.diag.usbStats() } catch (e: Exception) { "{}" }
+    /** إعادة ترميز صورة بمفكّك أندرويد (بديل لو فشل فك المتصفح للقطات الشاشة) → JPEG على خلفية بيضاء. */
+    @JavascriptInterface
+    fun reencode(data: String, maxDim: Int): String = try {
+        val bytes = bytesOf(data)
+        val bm = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            ?: throw IllegalStateException("decode failed")
+        val k = Math.min(1.0, maxDim.toDouble() / Math.max(bm.width, bm.height))
+        val s = if (k < 1.0) android.graphics.Bitmap.createScaledBitmap(bm, Math.max(1, (bm.width * k).toInt()), Math.max(1, (bm.height * k).toInt()), true) else bm
+        val flat = android.graphics.Bitmap.createBitmap(s.width, s.height, android.graphics.Bitmap.Config.ARGB_8888)
+        val cv = android.graphics.Canvas(flat)
+        cv.drawColor(android.graphics.Color.WHITE)
+        cv.drawBitmap(s, 0f, 0f, null)
+        val out = java.io.ByteArrayOutputStream()
+        flat.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, out)
+        ok("data" to Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP), "w" to flat.width, "h" to flat.height)
+    } catch (e: Exception) {
+        err(e)
+    }
+
+    @JavascriptInterface fun pickMode(m: String): String { a.pickMode = m; return ok() }
+    @JavascriptInterface fun pickInfo(): String = ok("info" to a.pickInfo)
     @JavascriptInterface fun inject(t: String, x: Double, y: Double): String { a.injectTouch(t, x.toFloat(), y.toFloat()); return "ok" }
     @JavascriptInterface fun usbPoll(): String = try { a.diag.usbPoll() } catch (e: Exception) { "[]" }
     @JavascriptInterface fun usbStop(): String { try { a.diag.usbStop() } catch (_: Exception) {}; return ok() }
